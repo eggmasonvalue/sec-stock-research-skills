@@ -2,16 +2,12 @@
 name: bottom-up-analyst
 description: >-
   Run a rigorous bottom-up fundamental deep dive on a single company and produce a
-  pitch-ready investment memo. Use this skill whenever the user hands you one stock - a
-  ticker or a name - and wants real due diligence: an investment thesis, a long/short
+  pitch-ready investment memo. Use this skill whenever the user hands you one stock — a
+  ticker or a name — and wants real due diligence: an investment thesis, a long/short
   case, "is this a buy?", a valuation, a bull/bear teardown, an earnings-quality check, or
-  a full research write-up. It is the analytical engine of a research stack: it drives
-  SEC-filing and market-data tools for grounding, reasons over the evidence to an *earned*
-  conviction, classifies the company into an archetype (compounder, hypergrowth, cyclical,
-  turnaround/inflection, special-situation, deep-value), triangulates an intrinsic-value
-  range, tries to kill its own thesis, and writes the memo. Reach for it any time the task
-  is "research this company" or "should I own this," even if neither "memo" nor "valuation"
-  is said out loud.
+  a full research write-up. Reach for it any time the task is "research this company",
+  "should I own this", "what do you think of X", or "do a deep dive on Y" — even if
+  neither "memo" nor "valuation" is said out loud.
 ---
 
 # Bottom-Up Analyst

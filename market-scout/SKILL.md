@@ -1,15 +1,14 @@
 ---
 name: market-scout
 description: >-
-  Pull public market data for US-listed stocks via Yahoo Finance (yfinance): current price,
-  market cap, shares, 52-week range, trailing returns, sector/industry peer tables, pre-ranked
-  screens (top by weight, top performers, top growth), and earnings call transcripts. Use this
-  whenever a task needs a quick market snapshot or quote for a ticker, trailing performance, a
-  company's peer set, a sector/theme shortlist, or earnings call transcripts — e.g. "what's
-  the price/return on X", "who are X's peers", "best-performing names in this industry",
-  "get me the latest earnings call", or turning a theme into a concrete list of tickers to
-  investigate. This is an unopinionated market-data layer: it surfaces facts and rankings;
-  it does not decide what is cheap, good, or worth buying.
+  Pull public market data for US-listed stocks via Yahoo Finance: price, market cap, shares,
+  52-week range, trailing returns, sector/industry peer tables and pre-ranked screens, and
+  earnings call transcripts. Use this whenever a task needs a quick market snapshot or quote
+  for a ticker, trailing performance, a company's peer set, a sector/theme shortlist, or
+  earnings call transcripts — e.g. "what's the price/return on X", "who are X's peers",
+  "best-performing names in this industry", "get me the latest earnings call", or turning a
+  theme into a concrete list of tickers. This is an unopinionated data layer; it does not
+  decide what is cheap, good, or worth buying.
 ---
 
 # Market Scout

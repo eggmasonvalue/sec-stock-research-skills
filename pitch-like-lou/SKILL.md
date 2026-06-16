@@ -3,10 +3,11 @@ name: pitch-like-lou
 description: >-
   Write or rewrite a stock pitch the way Norbert Lou did in his legendary Value Investors Club
   write-ups — numbers-first, high-conviction value investing. Use this skill whenever the user
-  wants to make the bull or bear case for a stock, draft an investment thesis, write-up, or memo,
+  wants to make the bull or bear case for a stock, draft an investment thesis or write-up,
   argue a long or short in a value-investing voice, or whenever Norbert Lou or Value Investors
-  Club (VIC) is mentioned. It guides where to dig and how to write the verdict, and pairs with
-  SEC-filing tools for the raw numbers.
+  Club (VIC) is mentioned. Also use it when asked to "pitch me on X", "write up this stock",
+  "convince me this is a buy/sell", "make the case for X", or render a finished thesis as a
+  short, compelling pitch. Pairs with SEC-filing tools for the raw numbers.
 ---
 
 # Pitch Like Norbert Lou

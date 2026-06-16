@@ -1,18 +1,13 @@
 ---
 name: sec-edgar-skill
 description: >-
-  Retrieve and extract data from SEC EDGAR filings for US-listed companies (domestic issuers
-  and foreign private issuers). Use this whenever a task needs SEC filings or their contents -
-  10-K/10-Q/8-K reports, 20-F/40-F/6-K foreign filings, XBRL financial statements, Forms 3/4/5
-  insider transactions, 13F institutional holdings, 13D/13G blockholdings, DEF 14A proxy /
-  executive compensation. Always start by running scripts/orient.py to see what a company
-  actually files and how that has changed over time, then pull only the sections you need. This
-  is the
-  unopinionated data/tools layer (an SDK): it fetches and extracts cleanly and token-efficiently;
-  it does not decide what is significant. Pair it with an analytical-framework skill for
-  judgment. Reach for it any time a question
-  touches a company's filings, financials, ownership, or governance, even if EDGAR is
-  not named explicitly.
+  Retrieve and extract SEC EDGAR filings and ownership data for US-listed companies. Use this
+  whenever a task touches a company's filings, financials, ownership, governance, or
+  institutional holders — even if EDGAR is not named explicitly. Covers 10-K/10-Q/8-K,
+  20-F/6-K foreign filings, XBRL financial statements, insider transactions, 13F institutional
+  holdings (via 13f.info), 13D/13G blockholdings, and DEF 14A proxy/compensation. Always start
+  by running scripts/orient.py, then pull only the sections you need. Unopinionated data layer:
+  it fetches and extracts token-efficiently; it does not decide what is significant.
 ---
 
 # SEC EDGAR Research Skill
