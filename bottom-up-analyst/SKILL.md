@@ -99,7 +99,8 @@ Do not pad a phase just because it exists.
    not evidence.
 
    **Pull the latest earnings call transcript.** After the filing read and market snapshot,
-   fetch the most recent earnings call transcript from `market-scout`:
+   fetch the most recent earnings call transcript. This is a `market-scout` script (resolve
+   the path against the `market-scout` skill directory, not this one):
    ```bash
    python scripts/fetch_transcripts.py --ticker <T> --latest 1
    ```
@@ -140,7 +141,7 @@ Do not pad a phase just because it exists.
    (their 8-Ks, 10-Qs, 10-Ks) for management commentary, pricing, and sentiment you can
    cite. **Peers' earnings call transcripts** are equally valuable primary sources — a
    competitor's CEO discussing pricing pressure, capacity additions, or market-share wins
-   on their own call is citable competitive intelligence:
+   on their own call is citable competitive intelligence (`market-scout` script):
    ```bash
    python scripts/fetch_transcripts.py --ticker <PEER> --latest 1
    ```
@@ -184,7 +185,8 @@ Do not pad a phase just because it exists.
    working, not failing. Re-tag every surviving claim as verified vs. assumed.
 
    **Check the institutional ownership picture.** Before finalising the risk assessment,
-   pull the 13F holder data from `sec-edgar-skill`:
+   pull the 13F holder data. This is a `sec-edgar-skill` script (resolve the path against
+   the `sec-edgar-skill` skill directory):
    ```bash
    python scripts/fetch_13f_holders.py --ticker <T> --top 15
    python scripts/fetch_13f_holders.py --ticker <T> --history
