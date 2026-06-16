@@ -127,6 +127,17 @@ Do not pad a phase just because it exists.
    floor, and peer multiples. End with an explicit **margin of safety**. Use the bundled
    `scripts/` and `references/guide_valuation.md`.
 
+   **Discount rate: reason it, don’t default it.** Before running any DCF or EPV, derive
+   the discount rate from the business’s actual risk profile — never default to 10% or
+   12%. The process: (1) pull betas for 2–4 closest business-model peers from
+   `market-scout`, (2) unlever each (Hamada), (3) average to get the peer-group business
+   risk, (4) re-lever for the subject’s pro-forma or target capital structure, (5) CAPM
+   → cost of equity → WACC, (6) sanity-check against the business description (a
+   government-contracted recurring-revenue oligopoly and a single-product biotech do not
+   deserve the same rate). The memo’s valuation section **must** include a “Discount Rate
+   Derivation” subsection showing this work. See `references/guide_valuation.md` §
+   “Discount rate” for the full methodology and common mistakes.
+
 6. **Try to kill it — pre-mortem.** Assume it's a year later and the thesis failed; write
    down why. Run the **archetype's disqualifiers** (each playbook lists them) *and* Lou's
    gate (above). Most candidates should die here or get marked down — that is the system

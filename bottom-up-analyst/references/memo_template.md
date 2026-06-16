@@ -71,6 +71,15 @@ archetype, including a **reverse-DCF of what today's price implies**. Lay out
 **bear / base / bull** scenarios with their key assumptions, converge on an **intrinsic-value
 range**, and state the **margin of safety** at the current price.
 
+This section **must** include a subsection titled **"Discount Rate Derivation"** (or
+similar) that shows the reasoning behind the discount rate used in the DCF and EPV. The
+subsection should show: the peer set used for beta benchmarking, their levered and
+unlevered betas, the re-levered beta for the subject company's capital structure, the
+resulting CAPM cost of equity, the WACC, and a sanity check against the business
+description (see `guide_valuation.md` § "Discount rate" for the full methodology). A
+discount rate without a derivation is an unauditable assumption — the reader cannot
+disagree with it, which means they cannot trust it.
+
 ### 7. Risks & pre-mortem
 The bear case, in your own words and as strong as you can make it. Run the archetype's
 disqualifiers explicitly. Assume it's a year out and the thesis failed — what broke?

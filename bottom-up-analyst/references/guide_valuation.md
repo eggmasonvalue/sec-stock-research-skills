@@ -83,14 +83,93 @@ lenses, and the right primary lens for some special situations and asset plays.
 
 The output is only as good as three judgment calls — show your work on each:
 
-- **Discount rate.** Tie it to the *risk of the cash flows*, not a textbook beta. A wide-moat
-  compounder and a single-product turnaround do not deserve the same rate. State it and why.
+- **Discount rate.** See the dedicated section below — this is the input most analysts get
+  wrong, and it deserves its own reasoning process.
 - **Terminal value.** This is usually most of a DCF's value, so it's where false precision
   hides. Keep terminal growth at or below long-run GDP; sanity-check the implied terminal
   multiple — if it bakes in a permanent premium multiple, you've smuggled optimism into the
   tail.
 - **The base cash flow.** Use *normalized* owner earnings (phase 3), not a peak or trough
   year. Garbage in, garbage out — most valuation errors are bad inputs, not bad arithmetic.
+
+## Discount rate — reason it, don't default it
+
+The discount rate is the single most levered input in a DCF: a 300bps change can move
+intrinsic value by 30–50%. Yet it is the input most often set by reflex (“10% for
+equity”) rather than by reasoning. **Every memo must derive and justify its discount rate
+in a dedicated subsection of the valuation section.** A number without a rationale is an
+assumption the reader cannot audit — and cannot trust.
+
+### The reasoning process (do this every time)
+
+1. **Start with the business, not the stock.** Ask: *what is the risk profile of the
+   underlying cash flows?* A government-contracted, recurring-revenue oligopoly with
+   mandated demand has fundamentally different cash-flow risk than a single-product
+   biotech or a commodity cyclical. The business risk should drive the unlevered cost of
+   capital — the stock’s trading volatility and capital structure are layered on top.
+
+2. **Anchor to peers, not defaults.** Pull betas for 2–4 closest business-model peers
+   from `market-scout` (yfinance’s `.info["beta"]`). Unlever each using Hamada:
+   `beta_u = beta_l / (1 + (1 - tax_rate) * D/E)`. Average the unlevered betas — this
+   is the *business risk* of the peer group, stripped of each company’s financing
+   choices.
+
+3. **Re-lever for the subject’s capital structure.** Use the company’s *pro-forma or
+   target* D/E (not necessarily today’s, if the capital structure is in transition):
+   `beta_l = beta_u * (1 + (1 - tax_rate) * D/E)`. Then CAPM:
+   `Ke = Rf + beta_l * ERP`. Use the current 10-year Treasury yield for Rf and a
+   long-run ERP of 5–6% (Damodaran’s implied ERP is the standard reference).
+
+4. **Compute WACC if doing an enterprise DCF.** Weight cost of equity and after-tax
+   cost of debt by their shares of total capital. If there is preferred equity or
+   mezzanine debt, include it as a separate tranche at its own cost.
+
+5. **Sanity-check against the business description.** Before using the number, ask:
+   *does this rate make sense for what this business actually is?* A few guideposts:
+
+   | Business type | Typical WACC range | Why |
+   | :-- | :-- | :-- |
+   | Regulated utility / infrastructure concession | 6–8% | Contracted, inflation-linked, near-monopoly |
+   | Mission-critical gov-contracted recurring revenue | 8–10% | Mandated demand, high switching costs, oligopoly |
+   | Stable consumer/enterprise compounder | 9–11% | Durable moat, predictable FCF |
+   | Cyclical industrial / commodity | 10–13% | Earnings volatility, capital intensity |
+   | Growth-stage / unproven unit economics | 12–15% | Execution risk, cash burn, TAM uncertainty |
+   | Distressed / binary outcome | 15%+ | Survival risk, option-like payoff |
+
+   If your derived WACC lands far outside the range for the business type, re-examine
+   your inputs — the beta sample, the D/E assumption, or the ERP. The guideposts are
+   not rules, but a derived rate that contradicts the business description is a red flag.
+
+6. **Separate business risk from financial risk.** When the capital structure is
+   distressed or in transition (turnarounds, post-divestiture, over-leveraged), the
+   *business* may deserve a low discount rate while the *equity* deserves a high one.
+   Make this explicit: run the DCF at the business-appropriate WACC to value the
+   enterprise, then subtract net debt and senior claims to get equity value. Do not
+   double-count by using a high WACC *and* subtracting the debt — that penalizes the
+   cash flows for leverage risk and then penalizes the equity again.
+
+7. **State it in the memo.** The valuation section must include a subsection titled
+   “**Discount Rate Derivation**” (or similar) that shows: the peer set used, their
+   betas and unlevered betas, the re-levered beta, the CAPM cost of equity, the WACC,
+   and the sanity check against the business description. A reader should be able to
+   disagree with your rate and re-run the DCF with their own — that’s the point.
+
+### Common mistakes
+
+- **Defaulting to 10% or 12%.** These are not reasoned rates; they are habits. 10% was
+  a reasonable equity return assumption when the risk-free rate was 4–5% and the ERP was
+  5–6%, but it says nothing about *this specific business*. Always derive.
+- **Using the stock’s own beta.** A distressed, thinly-traded small-cap will have a
+  high beta driven by liquidity and sentiment, not business risk. Use peer unlevered
+  betas to isolate the business risk, then re-lever.
+- **Double-counting leverage risk.** If you use a high WACC because the company is
+  leveraged, and then also subtract a large net-debt figure, you’re penalizing leverage
+  twice. The WACC already reflects the cost of the debt; subtracting net debt converts
+  enterprise value to equity value. Don’t inflate both.
+- **Ignoring capital structure transitions.** A turnaround that will be nearly debt-free
+  in 18 months should not be discounted at today’s levered cost of capital for a
+  10-year DCF. Use the *target* or *normalized* capital structure for the WACC, and
+  reflect the transition costs in the near-term cash flows instead.
 
 ## Weighting by archetype
 
