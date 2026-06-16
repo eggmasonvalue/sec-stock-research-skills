@@ -1,46 +1,14 @@
-# Holdings — institutions (13F) and 5%+ blockholders (13D/13G)
+# Holdings — deep route (edgartools) and blockholders (13D/13G)
 
-External ownership: large institutional managers (Form 13F) and 5%+ stakeholders
-(Schedules 13D/13G). For company *insiders* — officers and directors — see
-`guide_ownership.md` instead.
+> **For the common case** — "who owns this stock?", "how has ownership changed?",
+> "what does this fund hold?" — use `scripts/fetch_13f_holders.py` directly.
+> It is already listed in the Scripts section of SKILL.md and needs no guide.
+> Read this file only when you need **raw 13F filing data** (voting authority,
+> amendments, specific holding details) or **blockholder schedules** (13D/13G).
 
-## Institutional holdings — two approaches
+## Raw 13F via edgartools
 
-### Quick route: `fetch_13f_holders.py` (via 13f.info)
-
-For the most common ownership questions — "who owns this stock?", "how has
-institutional ownership changed?", "what does this fund hold?" — the bundled
-`fetch_13f_holders.py` script queries [13f.info](https://13f.info), a free
-structured interface to SEC 13F data. It is dramatically faster and more
-token-efficient than parsing raw 13F XML from EDGAR, and answers the question
-in one call:
-
-```bash
-# Who are the top institutional holders of CMTL right now?
-python scripts/fetch_13f_holders.py --ticker CMTL --top 15
-
-# How has institutional ownership changed over time?
-python scripts/fetch_13f_holders.py --ticker CMTL --history
-
-# What does Berkshire Hathaway hold?
-python scripts/fetch_13f_holders.py --manager "Berkshire Hathaway"
-
-# How has Royce's position in CMTL changed over time?
-python scripts/fetch_13f_holders.py --cik 0000906304 --cusip 205826209
-
-# Holders for a specific quarter
-python scripts/fetch_13f_holders.py --ticker AAPL --year 2025 --quarter 4 --top 20
-```
-
-**Use this as the default for 13F questions.** It resolves ticker → CUSIP
-automatically, handles manager search by name, and outputs compact Markdown.
-No SEC identity or API key is needed — 13f.info is public.
-
-### Deep route: `edgartools` (raw 13F from EDGAR)
-
-When you need the raw filing itself (e.g. to verify a specific holding, check
-voting/dispositive authority, or examine an amendment), use `edgartools` to
-query the manager's CIK directly:
+13F is filed by the **investment manager**, not the operating company. Query the manager:
 
 ```python
 manager = Company("Magnetar Capital LLC")

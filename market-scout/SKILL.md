@@ -86,18 +86,10 @@ python scripts/fetch_transcripts.py --ticker AAPL --quarter Q3 --year 2025
 python scripts/fetch_transcripts.py --ticker AAPL
 ```
 
-### Transcript output format
+### Transcript cache
 
-Each transcript is saved as a clean Markdown file to `transcript-cache/<TICKER>/transcripts/`
-(override with `--cache-dir` or `$TRANSCRIPT_CACHE_DIR`). The format is optimised for LLM
-consumption:
-
-- **Front-matter:** ticker, date, source URL
-- **Summary:** AI-generated summary (when Yahoo provides one via Quartr)
-- **Prepared Remarks:** each speaker gets an `### Speaker — Title` heading; consecutive
-  paragraphs from the same speaker are grouped under one heading
-- **Q&A:** automatically detected and separated into its own `## Q&A` section
-- Files are named `Q3-FY2026.md` etc., cached and reused across runs
-
-Transcripts are greppable: search for a speaker name, "guidance", "margin", or any keyword
-across the cached files to find the exact passage without reading the whole call.
+Transcripts are saved as LLM-friendly Markdown to `transcript-cache/<TICKER>/transcripts/`
+(override with `--cache-dir` or `$TRANSCRIPT_CACHE_DIR`). Files are named `Q3-FY2026.md`
+etc., cached and reused across runs. Each file has a summary, `## Prepared Remarks` with
+`### Speaker — Title` headings, and a `## Q&A` section — greppable by speaker name,
+"guidance", "margin", or any keyword.

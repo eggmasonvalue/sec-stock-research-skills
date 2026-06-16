@@ -121,7 +121,7 @@ quirks that make extraction correct.
 | `references/guide_filings.md` | Filing text: pulling a section by SEC item code (10-K/10-Q/8-K/20-F) vs. navigating free-form filings (DEF 14A/6-K) by their own contents, plus attachments and exhibits (incl. 6-K Exhibit 99.1). |
 | `references/guide_financials.md` | XBRL financial statements and individual facts (US-GAAP and IFRS), and the period-aggregation pitfalls. |
 | `references/guide_ownership.md` | Insider transactions (Forms 3/4/5), beneficial ownership, and executive compensation (DEF 14A; Form 20-F Item 6 for foreign issuers). |
-| `references/guide_holdings.md` | Institutional positions (13F) — including the fast `fetch_13f_holders.py` route via 13f.info — and 5%+ blockholders (Schedules 13D/13G). |
+| `references/guide_holdings.md` | **Deep route only:** raw 13F via edgartools (voting authority, amendments, specific holdings) and 5%+ blockholders (13D/13G). For the common case — “who owns this stock?” — use `scripts/fetch_13f_holders.py` directly (see Scripts above); no guide needed. |
 
 ## Scripts
 
