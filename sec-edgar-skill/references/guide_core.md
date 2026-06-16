@@ -78,3 +78,23 @@ company.docs                   # full API guide for the object
 company.docs.search("xbrl")    # search it for a topic
 latest_10k.docs.search("attachments")
 ```
+
+## Inline Python preamble
+
+When running `edgartools` inline (not via a bundled script), replicate the environment
+setup the scripts do on import:
+
+```python
+import sys
+if sys.platform.startswith("win"):
+    sys.stdout.reconfigure(encoding="utf-8")
+try:
+    import truststore; truststore.inject_into_ssl()
+except ImportError:
+    pass
+import edgar; edgar.set_identity("Jane Analyst jane@example.com")
+```
+
+This forces UTF-8 output (edgartools' emoji-rich reprs crash Windows cp1252 consoles)
+and routes TLS through the OS trust store (so HTTPS works behind an inspecting corporate
+proxy instead of raising `CERTIFICATE_VERIFY_FAILED`).

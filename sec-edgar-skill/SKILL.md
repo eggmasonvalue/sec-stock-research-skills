@@ -47,22 +47,9 @@ mechanical (set an SEC identity, or requests are blocked) — never analytical.
 3. **Verify:** `python scripts/test_setup.py --live` checks dependencies, identity, the
    cache location, and (with `--live`) makes one real SEC request.
 
-The scripts handle two environment hazards for you on import: they force UTF-8 output
-(edgartools' emoji-rich reprs otherwise crash Windows consoles) and, when `truststore`
-is installed, route TLS through the OS trust store (so HTTPS works behind an inspecting
-corporate proxy instead of raising `CERTIFICATE_VERIFY_FAILED`). When you run **inline**
-Python instead of a script, replicate that preamble:
-
-```python
-import sys
-if sys.platform.startswith("win"):
-    sys.stdout.reconfigure(encoding="utf-8")
-try:
-    import truststore; truststore.inject_into_ssl()
-except ImportError:
-    pass
-import edgar; edgar.set_identity("Jane Analyst jane@example.com")
-```
+The scripts handle environment hazards on import (UTF-8 stdout on Windows, truststore
+for corporate proxies). When you run **inline Python** instead of a script, replicate
+that preamble — see `references/guide_core.md` § "Inline Python preamble."
 
 ## How to work efficiently: pull only what you need
 
