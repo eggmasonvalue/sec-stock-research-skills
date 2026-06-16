@@ -191,6 +191,10 @@ Do not pad a phase just because it exists.
    python scripts/fetch_13f_holders.py --ticker <T> --top 15
    python scripts/fetch_13f_holders.py --ticker <T> --history
    ```
+   The output reports **share counts**, not dollar values (13F values are stale
+   quarter-end prices). To convert to ownership percentages, divide by total shares
+   outstanding from the `market-scout` snapshot or the latest 10-Q.
+
    This reveals who is positioned and how ownership has shifted — signals that feed
    directly into the risk and catalyst assessment:
    - **Concentration risk:** if 3–5 holders own >30% of the float, a single redemption
