@@ -29,18 +29,8 @@ this layer unopinionated lets any framework compose on top of it.
 
 ## Setup
 
-1. **Install dependencies** (Python ≥ 3.10):
-   ```bash
-   python -m venv .venv
-   .venv\Scripts\activate          # Windows  (or: source .venv/bin/activate)
-   pip install -r requirements.txt
-   ```
-2. **Set your SEC identity** — required by SEC fair-access policy; without it requests
-   return HTTP 403:
-   ```bash
-   export EDGAR_IDENTITY="Jane Analyst jane@example.com"     # bash/zsh
-   $env:EDGAR_IDENTITY = "Jane Analyst jane@example.com"     # PowerShell
-   ```
+1. **Install dependencies** (Python ≥ 3.10): `pip install -r requirements.txt`
+2. **Set `EDGAR_IDENTITY`** — see [repo-level setup](../README.md#setup).
 3. **Verify:** `python scripts/test_setup.py --live`
 
 ## Add the skill to your agent

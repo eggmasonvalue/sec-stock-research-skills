@@ -1,0 +1,8 @@
+# Required
+edgartools>=5        # SEC EDGAR client (Form 4, 13D, EFTS search)
+yfinance>=0.2        # screener + enrichment (Yahoo Finance)
+pandas>=2            # dataframes / tables
+requests>=2          # Discord webhook posting
+
+# Optional
+truststore>=0.9      # system-trust TLS for inspecting corporate proxies

@@ -1,0 +1,60 @@
+name: Daily Insider Scan
+
+on:
+  schedule:
+    # 7:00 AM ET on weekdays (11:00 UTC Nov-Mar, 12:00 UTC Mar-Nov)
+    # Using 12:00 UTC to cover EDT; during EST this runs at 7 AM still fine
+    - cron: "0 12 * * 1-5"
+  workflow_dispatch:
+    inputs:
+      date:
+        description: "Filing date to scan (YYYY-MM-DD or 'yesterday')"
+        default: "yesterday"
+      lookback:
+        description: "Days to look back for cluster detection"
+        default: "5"
+      zscore:
+        description: "Z-score threshold for rip/dip tagging"
+        default: "1.5"
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r signal-sweep/requirements.txt
+
+      - name: Run insider scan
+        env:
+          EDGAR_IDENTITY: ${{ secrets.EDGAR_IDENTITY }}
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        working-directory: signal-sweep
+        run: |
+          DATE="${{ github.event.inputs.date || 'yesterday' }}"
+          LOOKBACK="${{ github.event.inputs.lookback || '5' }}"
+          ZSCORE="${{ github.event.inputs.zscore || '1.5' }}"
+
+          WEBHOOK_ARG=""
+          if [ -n "$DISCORD_WEBHOOK_URL" ]; then
+            WEBHOOK_ARG="--webhook $DISCORD_WEBHOOK_URL"
+          fi
+
+          python scripts/scan_insiders.py \
+            --date "$DATE" \
+            --lookback "$LOOKBACK" \
+            --zscore "$ZSCORE" \
+            $WEBHOOK_ARG
+
+      - name: Upload scan results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: insider-scan-${{ github.run_id }}
+          path: signal-sweep/signal-sweep-cache/insiders/
+          retention-days: 90

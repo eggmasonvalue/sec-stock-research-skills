@@ -1,0 +1,99 @@
+{
+  "universe": {
+    "region": "us",
+    "market_cap_min": 50000000,
+    "market_cap_max": 10000000000
+  },
+  "screens": [
+    {
+      "id": "near-52wk-low",
+      "name": "Near 52-Week Low",
+      "emoji": "📉",
+      "description": "Stocks within 15% of their 52-week low — price dislocation in a thinly-covered universe",
+      "filters": [
+        {"field": "lastclose52weeklow.lasttwelvemonths", "op": "lte", "value": 1.15}
+      ],
+      "sort": {"field": "lastclose52weeklow.lasttwelvemonths", "asc": true},
+      "size": 25,
+      "enrich": true
+    },
+    {
+      "id": "high-short-interest",
+      "name": "High Short Interest",
+      "emoji": "🩳",
+      "description": "Stocks with >15% short interest and reasonable volume — someone disagrees strongly",
+      "filters": [
+        {"field": "short_percentage_of_float.value", "op": "gte", "value": 15},
+        {"field": "avgdailyvol3m", "op": "gte", "value": 100000}
+      ],
+      "sort": {"field": "short_percentage_of_float.value", "asc": false},
+      "size": 25,
+      "enrich": true
+    },
+    {
+      "id": "short-covering",
+      "name": "Shorts Covering (SI Dropping)",
+      "emoji": "📈",
+      "description": "Stocks where short interest dropped >20% — shorts capitulating, overhang lifting",
+      "filters": [
+        {"field": "short_interest_percentage_change.value", "op": "lt", "value": -20},
+        {"field": "short_percentage_of_float.value", "op": "gte", "value": 5}
+      ],
+      "sort": {"field": "short_interest_percentage_change.value", "asc": true},
+      "size": 25,
+      "enrich": true
+    },
+    {
+      "id": "insider-heavy",
+      "name": "High Insider Ownership",
+      "emoji": "🏠",
+      "description": "Stocks with >15% insider ownership — skin in the game, not just options",
+      "filters": [
+        {"field": "pctheldinsider", "op": "gte", "value": 0.15}
+      ],
+      "sort": {"field": "pctheldinsider", "asc": false},
+      "size": 25,
+      "enrich": true
+    },
+    {
+      "id": "fallen-from-grace",
+      "name": "Fallen From Grace",
+      "emoji": "💥",
+      "description": "Former momentum names 40-60% below their 52-week high ($200M+ market cap)",
+      "filters": [
+        {"field": "lastclose52weekhigh.lasttwelvemonths", "op": "gte", "value": 0.40},
+        {"field": "lastclose52weekhigh.lasttwelvemonths", "op": "lte", "value": 0.60},
+        {"field": "intradaymarketcap", "op": "gte", "value": 200000000}
+      ],
+      "sort": {"field": "lastclose52weekhigh.lasttwelvemonths", "asc": true},
+      "size": 25,
+      "enrich": true
+    },
+    {
+      "id": "low-institutional",
+      "name": "Under-Owned by Institutions",
+      "emoji": "🔍",
+      "description": "Stocks with <30% institutional ownership ($200M+) — under-discovered, no index flows",
+      "filters": [
+        {"field": "pctheldinst", "op": "lt", "value": 0.30},
+        {"field": "intradaymarketcap", "op": "gte", "value": 200000000}
+      ],
+      "sort": {"field": "pctheldinst", "asc": true},
+      "size": 25,
+      "enrich": true
+    },
+    {
+      "id": "forgotten",
+      "name": "Forgotten Stocks",
+      "emoji": "😴",
+      "description": "Stocks that went nowhere over 12 months (-10% to +10%) — the market hasn't noticed",
+      "filters": [
+        {"field": "fiftytwowkpercentchange", "op": "gte", "value": -10},
+        {"field": "fiftytwowkpercentchange", "op": "lte", "value": 10}
+      ],
+      "sort": {"field": "fiftytwowkpercentchange", "asc": true},
+      "size": 25,
+      "enrich": true
+    }
+  ]
+}

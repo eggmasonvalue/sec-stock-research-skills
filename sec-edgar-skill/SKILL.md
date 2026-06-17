@@ -27,24 +27,18 @@ consumer skill. Keep this layer neutral so any framework can compose on top of i
 Provide capability and facts; let the caller reason. The only hard requirements here are
 mechanical (set an SEC identity, or requests are blocked) — never analytical.
 
-## Setup (once per environment)
+## Setup
 
-1. **SEC identity — required.** The SEC blocks anonymous requests with HTTP 403. Set a
-   real `Name email` once; every script reads it automatically:
-   - PowerShell: `$env:EDGAR_IDENTITY = "Jane Analyst jane@example.com"`
-   - Bash: `export EDGAR_IDENTITY="Jane Analyst jane@example.com"`
-
-   (or pass `--identity "Name email@example.com"` to any script).
-2. **Python ≥ 3.10** with the dependencies installed. Use that interpreter directly
-   (e.g. `.venv\Scripts\python.exe` on Windows, `.venv/bin/python` elsewhere). Install
-   with `pip install -r requirements.txt` (`edgartools` and `pandas` are required;
-   `truststore` is optional, for inspecting corporate proxies).
-3. **Verify:** `python scripts/test_setup.py --live` checks dependencies, identity, the
-   cache location, and (with `--live`) makes one real SEC request.
+Run `python scripts/test_setup.py --live` to verify dependencies and SEC identity.
+If identity is missing, the error message tells the user exactly how to set
+`$EDGAR_IDENTITY` (see the [repo-level setup](../README.md#setup) for the full
+explanation). Every script reads it automatically; you can also pass `--identity`
+per-call.
 
 The scripts handle environment hazards on import (UTF-8 stdout on Windows, truststore
-for corporate proxies). When you run **inline Python** instead of a script, replicate
-that preamble — see `references/guide_core.md` § "Inline Python preamble."
+for corporate proxies). When writing **inline Python** that calls `edgartools` directly
+(not via a bundled script), replicate that preamble — see `references/guide_core.md`
+§ "Inline Python preamble."
 
 ## How to work efficiently: pull only what you need
 

@@ -85,16 +85,18 @@ When running `edgartools` inline (not via a bundled script), replicate the envir
 setup the scripts do on import:
 
 ```python
-import sys
+import os, sys
 if sys.platform.startswith("win"):
     sys.stdout.reconfigure(encoding="utf-8")
 try:
     import truststore; truststore.inject_into_ssl()
 except ImportError:
     pass
-import edgar; edgar.set_identity("Jane Analyst jane@example.com")
+import edgar; edgar.set_identity(os.environ["EDGAR_IDENTITY"])
 ```
 
-This forces UTF-8 output (edgartools' emoji-rich reprs crash Windows cp1252 consoles)
-and routes TLS through the OS trust store (so HTTPS works behind an inspecting corporate
-proxy instead of raising `CERTIFICATE_VERIFY_FAILED`).
+This forces UTF-8 output (edgartools' emoji-rich reprs crash Windows cp1252 consoles),
+routes TLS through the OS trust store (so HTTPS works behind an inspecting corporate
+proxy instead of raising `CERTIFICATE_VERIFY_FAILED`), and reads the SEC identity from
+the environment (the scripts resolve this automatically; inline code must do it
+explicitly).

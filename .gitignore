@@ -6,6 +6,9 @@ __pycache__/
 # SEC EDGAR download cache (regenerated on demand)
 sec-cache/
 
+# Signal-sweep output cache (regenerated on demand)
+signal-sweep-cache/
+
 # OS cruft
 .DS_Store
 Thumbs.db
