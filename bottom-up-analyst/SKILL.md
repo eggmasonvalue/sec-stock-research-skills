@@ -192,6 +192,52 @@ Do not pad a phase just because it exists.
      suggests accumulation; the reverse suggests distribution. Cross-reference with the
      `--history` output.
 
+   **Check insider ownership and recent activity.** Insider transactions are a direct,
+   auditable signal of whether the people running the business are aligned with outside
+   shareholders — or quietly heading for the exits. A management team buying stock with
+   their own money while the price is depressed is one of the strongest confirming signals
+   in fundamental analysis; a management team selling into your thesis is a warning you
+   cannot ignore. Pull the insider data. This is a `sec-edgar-skill` script (resolve the
+   path against the `sec-edgar-skill` skill directory):
+   ```bash
+   python scripts/fetch_insider_trades.py --ticker <T>
+   python scripts/fetch_insider_trades.py --ticker <T> --start <12mo-ago> --end <today>
+   python scripts/fetch_insider_trades.py --ticker <T> --buys-only
+   ```
+   The output reports recent Form 4 transactions — open-market purchases (code P), sales
+   (code S), option exercises (code M), and tax withholdings (code F) — with share counts,
+   prices, and each insider's remaining holdings.
+
+   Read the insider picture for what it tells you about adverse selection risk and
+   alignment:
+   - **Open-market purchases by officers/directors** are the strongest signal — these are
+     voluntary, with the insider's own capital, and filed publicly. A CEO or CFO buying
+     $500K+ of stock at current prices is putting their money where their mouth is.
+     Multiple insiders buying in the same window (a "cluster buy") is even stronger.
+   - **Selling context matters.** Not all insider sales are bearish — 10b5-1 plans,
+     diversification, and tax-driven exercises are routine. But *discretionary* sales by
+     senior officers outside a pre-announced plan, especially into strength or ahead of a
+     known risk, are a red flag. Look at the pattern: is the CEO selling every quarter
+     like clockwork (plan), or did three executives dump shares the week after an earnings
+     beat (discretionary)?
+   - **Ownership level vs. compensation.** Cross-reference insider holdings (the
+     "Remaining Shares" column) against the proxy's compensation tables. An executive
+     whose stock holdings are 10x+ their annual salary has real skin in the game; one
+     whose holdings are a rounding error relative to their cash comp does not.
+   - **Buy/sell ratio and trend.** The summary table shows the aggregate buy/sell ratio.
+     A ratio well above 1x (net buying) over the past 6-12 months is confirming; a ratio
+     well below 1x (net selling) into a thesis you're building long is a direct adverse-
+     selection warning — the people with the best information are reducing exposure.
+   - **Insider activity at inflection points.** The most informative insider trades happen
+     around events — after a selloff, before a catalyst, during a turnaround. An insider
+     buying after a 40% drawdown is telling you they think the market overreacted. An
+     insider selling ahead of a product launch they've been hyping is telling you
+     something else entirely.
+   - **Foreign private issuers (FPIs):** FPIs are exempt from Section 16 and do not file
+     Forms 3/4/5 on EDGAR. Insider transaction data will not be available; note this gap
+     in the memo and check the home-jurisdiction regulator if the thesis depends on
+     insider alignment (e.g. SEDAR+ for Canadian filers).
+
 7. **Reach a verdict at the conviction the work supports.** State the call - **Long /
    Short / Pass / Watch** - with an honest conviction level, the **variant perception**
    (what you believe that the market doesn't, and why you're right), the catalysts or
@@ -232,9 +278,12 @@ You are the one deciding what the hands fetch. Be deliberate and frugal:
 - **Transcripts are greppable too.** Once cached, grep a transcript for "guidance",
   "margin", a competitor's name, or a specific metric - you don't need to read the whole
   45-minute call to find the passage that matters.
-- **13F holder data is live, not cached.** `fetch_13f_holders.py` prints to stdout and
-  does not write to disk (ownership data is time-sensitive). Run it when you need it;
-  it's one fast HTTP call.
+- **Ownership data is cached like everything else.** `fetch_13f_holders.py` writes to
+  `sec-cache/{TICKER}/13f-holders_{YEAR}-Q{Q}.md` (or `13f-history_{TICKER}.md` for
+  `--history`). `fetch_insider_trades.py` writes to
+  `sec-cache/{TICKER}/insider-trades_{START}_{END}.md`. The quarter or date range in the
+  filename makes the scope explicit. Glob the cache before re-fetching — if the window
+  you need is already on disk, grep and read it rather than re-hitting the source.
 - **Spend tokens where the archetype says the value hides.** Don't fetch a proxy's
   compensation tables for a hypergrowth TAM question, or a deferred-revenue footnote for a
   liquidation. Let the playbook route you.

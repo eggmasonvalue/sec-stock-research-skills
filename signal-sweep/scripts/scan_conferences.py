@@ -205,8 +205,6 @@ def main():
     slug = f"{args.start}_to_{args.end}"
     c.write_output(cache, "conferences", slug, md)
 
-    print(md)
-
 
 if __name__ == "__main__":
     main()

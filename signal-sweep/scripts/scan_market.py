@@ -241,7 +241,6 @@ def main():
         combined = "\n---\n\n".join(all_md)
         slug = f"all-screens_{today}"
         c.write_output(cache, "screens", slug, combined)
-        print(combined)
     else:
         screen = next((s for s in screens if s["id"] == args.screen), None)
         if not screen:
@@ -251,7 +250,6 @@ def main():
         md = run_screen(screen, universe, args.size, do_enrich, cache)
         slug = f"{args.screen}_{today}"
         c.write_output(cache, "screens", slug, md)
-        print(md)
 
 
 if __name__ == "__main__":

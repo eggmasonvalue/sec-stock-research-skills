@@ -96,7 +96,7 @@ quirks that make extraction correct.
 | `references/guide_core.md` | The mechanics behind `scripts/orient.py`: resolving a company, listing/filtering filings, surveying the filing mix, `.to_context()` previews, and `.docs` self-help. Read it to drive orientation inline or go beyond the script. |
 | `references/guide_filings.md` | Filing text: pulling a section by SEC item code (10-K/10-Q/8-K/20-F) vs. navigating free-form filings (DEF 14A/6-K) by their own contents, plus attachments and exhibits (incl. 6-K Exhibit 99.1). |
 | `references/guide_financials.md` | XBRL financial statements and individual facts (US-GAAP and IFRS), and the period-aggregation pitfalls. |
-| `references/guide_ownership.md` | Insider transactions (Forms 3/4/5), beneficial ownership, and executive compensation (DEF 14A; Form 20-F Item 6 for foreign issuers). |
+| `references/guide_ownership.md` | Insider transactions (Forms 3/4/5), beneficial ownership, and executive compensation (DEF 14A; Form 20-F Item 6 for foreign issuers). For the common case — “what are insiders buying/selling?” — use `scripts/fetch_insider_trades.py` directly; no guide needed. |
 | `references/guide_holdings.md` | **Deep route only:** raw 13F via edgartools (voting authority, amendments, specific holdings) and 5%+ blockholders (13D/13G). For the common case — “who owns this stock?” — use `scripts/fetch_13f_holders.py` directly (see Scripts above); no guide needed. |
 
 ## Scripts
@@ -126,6 +126,11 @@ python scripts/parse_financials.py --ticker AAPL --year 2024 --quarter 1 --state
 
 # Table of contents for a large cached filing
 python scripts/list_headings.py --file sec-cache/AAPL/10-K_2023-11-03_0000320193-23-000106.md
+
+# Insider transactions — what are insiders buying/selling? (Form 4)
+python scripts/fetch_insider_trades.py --ticker AAPL
+python scripts/fetch_insider_trades.py --ticker AAPL --start 2025-01-01 --end 2026-06-17
+python scripts/fetch_insider_trades.py --ticker AAPL --start 2025-06-01 --buys-only
 
 # 13F institutional holders — who owns this stock? (via 13f.info, no SEC identity needed)
 python scripts/fetch_13f_holders.py --ticker AAPL --top 15

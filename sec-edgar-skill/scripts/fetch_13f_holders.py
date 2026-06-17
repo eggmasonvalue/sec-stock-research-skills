@@ -15,8 +15,12 @@ EDGAR. It offers three key views:
   **Cross-reference** (how has a specific manager's position changed?):
     --cik 0000906304 --cusip 205826209  → one manager's history with one stock
 
-Output is compact Markdown printed to stdout (ownership data is time-sensitive,
-so nothing is cached to disk). Run ``--help`` for the full flag reference.
+All output is written to the cache and the absolute path is emitted to stdout:
+  - Stock-centric: ``<cache>/<TICKER>/13f-holders_<YEAR>-Q<Q>.md``
+    (or ``13f-history_<TICKER>.md`` for --history)
+  - Manager-centric: ``<cache>/managers/13f-manager_<CIK>.md``
+  - Cross-reference: ``<cache>/<TICKER>/13f-xref_<CIK>.md``
+    (or ``<cache>/managers/13f-xref_<CIK>_<CUSIP>.md`` without --ticker)
 
 Data source: https://13f.info (public, no API key needed).
 """
@@ -166,36 +170,40 @@ def _fmt_pct(p: float | None) -> str:
 # Output: Stock-centric (who owns this stock?)
 # ---------------------------------------------------------------------------
 
-def _print_stock_holders(ticker: str, cusip: str, issuer: str,
-                         year: int, quarter: int, top_n: int):
-    """Print the top institutional holders for a stock in a given quarter."""
+def _build_stock_holders(ticker: str, cusip: str, issuer: str,
+                         year: int, quarter: int, top_n: int) -> str | None:
+    """Build Markdown for the top institutional holders in a given quarter.
+
+    Returns the Markdown string, or None if no data is available.
+    """
     data = _holders_for_quarter(cusip, year, quarter)
     if not data or not data.get("data"):
         c.log(f"No holder data found for {ticker} ({cusip}) Q{quarter} {year}.")
-        return
+        return None
 
     holders = data["data"]
+    lines = []
 
     # Determine period end date from the first entry
     period_end = ""
     if holders and isinstance(holders[0][1], list):
         period_end = holders[0][1][0]  # e.g. "2026-03-31"
 
-    print(f"# 13F Institutional Holders: {ticker} ({issuer})")
-    print(f"")
-    print(f"- **CUSIP:** {cusip}")
-    print(f"- **Period:** Q{quarter} {year}")
+    lines.append(f"# 13F Institutional Holders: {ticker} ({issuer})")
+    lines.append("")
+    lines.append(f"- **CUSIP:** {cusip}")
+    lines.append(f"- **Period:** Q{quarter} {year}")
     if period_end:
-        print(f"- **Holdings as of:** {period_end}")
-    print(f"- **Total holders reporting:** {len(holders)}")
-    print(f"- **Source:** {_BASE}/cusip/{cusip}/{year}/{quarter}")
-    print()
+        lines.append(f"- **Holdings as of:** {period_end}")
+    lines.append(f"- **Total holders reporting:** {len(holders)}")
+    lines.append(f"- **Source:** {_BASE}/cusip/{cusip}/{year}/{quarter}")
+    lines.append("")
 
     # Each holder entry: [[manager_name, cik, cusip], [date, filing_slug], value, shares, principal]
-    print(f"## Top {min(top_n, len(holders))} Holders by Shares")
-    print()
-    print("| # | Manager | Shares | CIK |")
-    print("|---|---------|--------|-----|")
+    lines.append(f"## Top {min(top_n, len(holders))} Holders by Shares")
+    lines.append("")
+    lines.append("| # | Manager | Shares | CIK |")
+    lines.append("|---|---------|--------|-----|")
 
     # Sort by shares descending
     ranked = sorted(holders, key=lambda h: h[3] or 0, reverse=True)
@@ -207,16 +215,20 @@ def _print_stock_holders(ticker: str, cusip: str, issuer: str,
         name = manager_info[0] if isinstance(manager_info, list) else str(manager_info)
         cik = manager_info[1] if isinstance(manager_info, list) and len(manager_info) > 1 else ""
 
-        print(f"| {i+1} | {name} | {_fmt_shares(shares)} | {cik} |")
+        lines.append(f"| {i+1} | {name} | {_fmt_shares(shares)} | {cik} |")
 
     if len(holders) > top_n:
-        print(f"\n*Showing top {top_n} of {len(holders)} holders. "
-              f"Use --top to adjust.*")
+        lines.append(f"")
+        lines.append(f"*Showing top {top_n} of {len(holders)} holders. "
+                     f"Use --top to adjust.*")
+
+    return "\n".join(lines)
 
 
-def _print_stock_history(ticker: str, cusip: str, issuer: str):
-    """Print the quarterly holder/value summary for a stock over time.
+def _build_stock_history(ticker: str, cusip: str, issuer: str) -> str | None:
+    """Build Markdown for the quarterly holder/share-count history.
 
+    Returns the Markdown string, or None if no data is available.
     This requires scraping the HTML page since there's no JSON endpoint
     for the CUSIP overview.
     """
@@ -225,13 +237,14 @@ def _print_stock_history(ticker: str, cusip: str, issuer: str):
     html = _get_html(f"{_BASE}/cusip/{cusip}")
     if not html:
         c.log(f"No history data found for {ticker} ({cusip}).")
-        return
+        return None
 
-    print(f"# 13F Holder History: {ticker} ({issuer})")
-    print(f"")
-    print(f"- **CUSIP:** {cusip}")
-    print(f"- **Source:** {_BASE}/cusip/{cusip}")
-    print()
+    lines = []
+    lines.append(f"# 13F Holder History: {ticker} ({issuer})")
+    lines.append("")
+    lines.append(f"- **CUSIP:** {cusip}")
+    lines.append(f"- **Source:** {_BASE}/cusip/{cusip}")
+    lines.append("")
 
     # Parse the HTML table rows — each row has 5 <td> cells:
     # period (with link), filings, shares, value, options value
@@ -244,22 +257,27 @@ def _print_stock_history(ticker: str, cusip: str, issuer: str):
         re.DOTALL
     )
 
-    print("| Period | Holders | Shares (excl. options) |")
-    print("|--------|---------|----------------------|")
+    lines.append("| Period | Holders | Shares (excl. options) |")
+    lines.append("|--------|---------|----------------------|")
 
     for m in row_pattern.finditer(html):
         period = m.group(1).strip()
         filings = m.group(2).strip()
         shares = m.group(3).strip()
-        print(f"| {period} | {filings} | {shares} |")
+        lines.append(f"| {period} | {filings} | {shares} |")
+
+    return "\n".join(lines)
 
 
 # ---------------------------------------------------------------------------
 # Output: Manager-centric (what does this fund hold?)
 # ---------------------------------------------------------------------------
 
-def _print_manager_holdings(cik: str, manager_name: str):
-    """Print a manager's filing history (scraped from HTML)."""
+def _build_manager_holdings(cik: str, manager_name: str) -> str | None:
+    """Build Markdown for a manager's filing history (scraped from HTML).
+
+    Returns the Markdown string, or None if no data is available.
+    """
     import re
 
     # Try to find the manager's page URL via autocomplete
@@ -280,13 +298,14 @@ def _print_manager_holdings(cik: str, manager_name: str):
     html = _get_html(f"{_BASE}{manager_url}")
     if not html:
         c.log(f"No data found for manager {manager_name} ({cik}).")
-        return
+        return None
 
-    print(f"# 13F Filings: {manager_name}")
-    print(f"")
-    print(f"- **CIK:** {cik}")
-    print(f"- **Source:** {_BASE}{manager_url}")
-    print()
+    lines = []
+    lines.append(f"# 13F Filings: {manager_name}")
+    lines.append("")
+    lines.append(f"- **CIK:** {cik}")
+    lines.append(f"- **Source:** {_BASE}{manager_url}")
+    lines.append("")
 
     # Parse the filing history table — 7 columns:
     # Quarter (link), Holdings, Value, Top Holdings (title attr), Form Type, Date Filed, Filing ID
@@ -300,8 +319,8 @@ def _print_manager_holdings(cik: str, manager_name: str):
         re.DOTALL
     )
 
-    print("| Quarter | Holdings | Top Holdings | Type | Filed |")
-    print("|---------|----------|--------------|------|-------|")
+    lines.append("| Quarter | Holdings | Top Holdings | Type | Filed |")
+    lines.append("|---------|----------|--------------|------|-------|")
 
     count = 0
     for m in row_pattern.finditer(html):
@@ -310,39 +329,46 @@ def _print_manager_holdings(cik: str, manager_name: str):
         top = m.group(5).strip()
         form_type = m.group(6).strip()
         filed = m.group(7).strip()
-        print(f"| {quarter} | {holdings} | {top} | {form_type} | {filed} |")
+        lines.append(f"| {quarter} | {holdings} | {top} | {form_type} | {filed} |")
         count += 1
         if count >= 20:
             break
 
     if count == 0:
         c.log("WARNING: could not parse manager filing history from HTML.")
+        return None
+
+    return "\n".join(lines)
 
 
 # ---------------------------------------------------------------------------
 # Output: Cross-reference (manager × stock history)
 # ---------------------------------------------------------------------------
 
-def _print_manager_stock_history(cik: str, cusip: str,
-                                  manager_name: str, ticker: str):
-    """Print a specific manager's position history for a specific stock."""
+def _build_manager_stock_history(cik: str, cusip: str,
+                                  manager_name: str, ticker: str) -> str | None:
+    """Build Markdown for a specific manager's position history for a stock.
+
+    Returns the Markdown string, or None if no data is available.
+    """
     data = _manager_cusip_history(cik, cusip)
     if not data or not data.get("data"):
         c.log(f"No position history found for {manager_name} in {ticker}.")
-        return
+        return None
 
     entries = data["data"]
 
-    print(f"# Position History: {manager_name} → {ticker}")
-    print(f"")
-    print(f"- **Manager CIK:** {cik}")
-    print(f"- **CUSIP:** {cusip}")
-    print(f"- **Source:** {_BASE}/manager/{cik}/cusip/{cusip}")
-    print()
+    lines = []
+    lines.append(f"# Position History: {manager_name} → {ticker}")
+    lines.append("")
+    lines.append(f"- **Manager CIK:** {cik}")
+    lines.append(f"- **CUSIP:** {cusip}")
+    lines.append(f"- **Source:** {_BASE}/manager/{cik}/cusip/{cusip}")
+    lines.append("")
 
     # Each entry: [[date, filing_slug], value, pct, shares, principal, date_filed, [year, quarter]]
-    print("| Period | Shares | % of Portfolio | Filed |")
-    print("|--------|--------|---------------|-------|")
+    lines.append("| Period | Shares | % of Portfolio | Filed |")
+    lines.append("|--------|--------|---------------|-------|")
 
     for e in entries:
         pct = e[2]
@@ -351,7 +377,9 @@ def _print_manager_stock_history(cik: str, cusip: str,
         period_info = e[6]  # [year, quarter]
 
         period = f"Q{period_info[1]} {period_info[0]}"
-        print(f"| {period} | {_fmt_shares(shares)} | {_fmt_pct(pct)} | {date_filed} |")
+        lines.append(f"| {period} | {_fmt_shares(shares)} | {_fmt_pct(pct)} | {date_filed} |")
+
+    return "\n".join(lines)
 
 
 # ---------------------------------------------------------------------------
@@ -412,7 +440,9 @@ def main():
     # Cross-reference
     p.add_argument("--cusip", help="CUSIP for cross-reference with --cik.")
 
+    c.add_cache_arg(p)
     args = p.parse_args()
+    cache = c.cache_root(args.cache_dir)
 
     # Validate: at least one of --ticker, --manager, or --cik is required
     if not args.ticker and not args.manager and not args.cik:
@@ -422,7 +452,14 @@ def main():
     if args.cik and args.cusip:
         manager_name = args.manager or args.cik
         ticker_label = args.ticker or args.cusip
-        _print_manager_stock_history(args.cik, args.cusip, manager_name, ticker_label)
+        md = _build_manager_stock_history(args.cik, args.cusip, manager_name, ticker_label)
+        if md:
+            out_dir = cache / "managers"
+            out_dir.mkdir(parents=True, exist_ok=True)
+            slug = c.safe_component(args.cik)
+            cusip_slug = c.safe_component(args.cusip)
+            path = c.write_text(out_dir / f"13f-xref_{slug}_{cusip_slug}.md", md)
+            c.emit(path)
         return
 
     # Mode 2: Stock-centric (--ticker)
@@ -436,13 +473,22 @@ def main():
         c.log(f"  {sym} → {issuer} (CUSIP: {cusip})")
 
         if args.history:
-            _print_stock_history(args.ticker, cusip, issuer)
+            md = _build_stock_history(args.ticker, cusip, issuer)
+            if md:
+                out_dir = c.company_dir(cache, None, ticker_hint=args.ticker)
+                path = c.write_text(out_dir / f"13f-history_{args.ticker.upper()}.md", md)
+                c.emit(path)
             return
 
         # If --cik is also provided, show cross-reference
         if args.cik:
             manager_name = args.manager or args.cik
-            _print_manager_stock_history(args.cik, cusip, manager_name, args.ticker)
+            md = _build_manager_stock_history(args.cik, cusip, manager_name, args.ticker)
+            if md:
+                out_dir = c.company_dir(cache, None, ticker_hint=args.ticker)
+                slug = c.safe_component(args.cik)
+                path = c.write_text(out_dir / f"13f-xref_{slug}.md", md)
+                c.emit(path)
             return
 
         year = args.year
@@ -453,7 +499,11 @@ def main():
             quarter = quarter or q
 
         c.log(f"Fetching Q{quarter} {year} holders for {sym}...")
-        _print_stock_holders(args.ticker, cusip, issuer, year, quarter, args.top)
+        md = _build_stock_holders(args.ticker, cusip, issuer, year, quarter, args.top)
+        if md:
+            out_dir = c.company_dir(cache, None, ticker_hint=args.ticker)
+            path = c.write_text(out_dir / f"13f-holders_{year}-Q{quarter}.md", md)
+            c.emit(path)
         return
 
     # Mode 3: Manager-centric (--manager or --cik without --cusip)
@@ -465,11 +515,23 @@ def main():
             sys.exit(1)
         cik, name = resolved
         c.log(f"  Found: {name} (CIK: {cik})")
-        _print_manager_holdings(cik, name)
+        md = _build_manager_holdings(cik, name)
+        if md:
+            out_dir = cache / "managers"
+            out_dir.mkdir(parents=True, exist_ok=True)
+            slug = c.safe_component(cik)
+            path = c.write_text(out_dir / f"13f-manager_{slug}.md", md)
+            c.emit(path)
         return
 
     if args.cik:
-        _print_manager_holdings(args.cik, args.cik)
+        md = _build_manager_holdings(args.cik, args.cik)
+        if md:
+            out_dir = cache / "managers"
+            out_dir.mkdir(parents=True, exist_ok=True)
+            slug = c.safe_component(args.cik)
+            path = c.write_text(out_dir / f"13f-manager_{slug}.md", md)
+            c.emit(path)
         return
 
 

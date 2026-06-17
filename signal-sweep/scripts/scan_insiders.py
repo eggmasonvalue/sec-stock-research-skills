@@ -769,7 +769,6 @@ def main():
                           mcap_data)
     slug = end_date
     c.write_output(cache, "insiders", slug, md)
-    print(md)
 
     if args.webhook:
         embeds = _build_discord_embeds(clusters, notable, filings_13d)

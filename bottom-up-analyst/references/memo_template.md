@@ -95,10 +95,13 @@ description (see `guide_valuation.md` § "Discount rate" for the full methodolog
 discount rate without a derivation is an unauditable assumption — the reader cannot
 disagree with it, which means they cannot trust it.
 
-### 7. Institutional ownership
-Who owns this stock and what does the ownership picture tell you? Pull from
-`sec-edgar-skill`'s `scripts/fetch_13f_holders.py`. Include:
-- **Top holders** (top 10–15 by value) and whether they are passive index funds or
+### 7. Ownership — institutional holders and insider activity
+Who owns this stock — from the outside and from the inside — and what does the
+ownership picture tell you about alignment, adverse selection, and risk?
+
+**Institutional holders.** Pull from `sec-edgar-skill`'s
+`scripts/fetch_13f_holders.py`. Include:
+- **Top holders** (top 10–15 by shares) and whether they are passive index funds or
   active/concentrated managers.
 - **Ownership trend** — is institutional ownership rising or falling? Cross-reference
   with price to distinguish accumulation from distribution.
@@ -107,8 +110,26 @@ Who owns this stock and what does the ownership picture tell you? Pull from
 - **Concentration risk** — if a handful of holders dominate the float, flag the
   liquidity and forced-selling risk.
 
-This section is short (a table + a paragraph of interpretation), but it grounds the
-catalyst and risk sections that follow.
+**Insider ownership and activity.** Pull from `sec-edgar-skill`'s
+`scripts/fetch_insider_trades.py`. Include:
+- **Recent insider transactions** — a table of open-market purchases and sales over
+  the past 6–12 months. Distinguish voluntary open-market trades (code P/S) from
+  routine option exercises (M) and tax withholdings (F).
+- **Buy/sell ratio** — are insiders net buyers or net sellers? A strong buy/sell ratio
+  is a confirming signal; net selling into your long thesis is an adverse-selection
+  warning.
+- **Key buyers/sellers** — name the individuals and their roles. A CEO buying $1M of
+  stock carries more weight than a director buying $20K.
+- **Ownership level** — how much do insiders own in aggregate? Cross-reference
+  remaining holdings against compensation (from the proxy) to gauge skin in the game.
+- **FPI note** — if the company is a foreign private issuer exempt from Section 16,
+  state that Form 4 data is unavailable and note any home-jurisdiction disclosures
+  found (or the gap, if none).
+
+This section is short (a table or two + a paragraph of interpretation per sub-topic),
+but it grounds the catalyst and risk sections that follow. The insider picture in
+particular is a direct check on adverse selection — if the people with the best
+information are not aligned with your thesis, that fact belongs in the risk section.
 
 ### 8. Risks & pre-mortem
 The bear case, in your own words and as strong as you can make it. Run the archetype's

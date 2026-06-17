@@ -207,8 +207,6 @@ def main():
     slug = f"{slug_kw}_since-{args.since}"
     c.write_output(cache, "themes", slug, md)
 
-    print(md)
-
 
 if __name__ == "__main__":
     main()
