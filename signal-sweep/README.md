@@ -38,7 +38,7 @@ See [SKILL.md](SKILL.md) for invocation details and flags.
    ```bash
    pip install -r requirements.txt    # edgartools, yfinance, pandas, requests
    ```
-2. **Set `EDGAR_IDENTITY`** — required for insider and theme scans (see
+2. **Set `EDGAR_IDENTITY`** — required for insider, theme, and conference scans (see
    [repo-level setup](../README.md#setup)).
 3. Market screens (`scan_market.py`) use Yahoo Finance only and need no identity.
 

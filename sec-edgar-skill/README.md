@@ -25,6 +25,8 @@ this layer unopinionated lets any framework compose on top of it.
   - `fetch_filing.py`, `fetch_filings.py` — filings (and sections/attachments) to Markdown.
   - `parse_financials.py` — XBRL statements to CSV.
   - `list_headings.py` — heading→line map for a cached filing.
+  - `fetch_insider_trades.py` — insider transactions (Form 4 buys/sells).
+  - `fetch_13f_holders.py` — institutional 13F holders (via 13f.info).
   - `test_setup.py` — environment diagnostics.
 
 ## Setup

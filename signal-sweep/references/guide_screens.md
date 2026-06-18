@@ -97,16 +97,16 @@ must pass.
 When `"enrich": true`, the script calls `yf.Ticker(symbol).info` for each result and
 adds these columns to the output:
 
-- Analyst rating, price targets (mean, median, high, low)
-- Short % of float, prior month shares short
+- Analyst rating, price targets (mean, median)
+- Short % of float
 - Insider %, institutional %
-- Quarterly earnings growth, revenue growth
 - Sector, industry
+- P/E (trailing or forward)
 - Current price, market cap
-- Trailing 2Y and 3Y returns (calculated from price history)
 
-The enrichment pass takes ~1 second per ticker. For 25 results, expect ~30 seconds.
-Use `--no-enrich` for faster runs when you only need the screener output.
+The enrichment pass takes ~2–3 seconds per ticker (two API calls: snapshot + price
+history). For 25 results, expect ~1 minute. Use `--no-enrich` for faster runs when
+you only need the screener output.
 
 ## Example: adding a custom screen
 

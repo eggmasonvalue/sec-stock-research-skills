@@ -121,7 +121,7 @@ def _render_markdown(screen: dict, quotes: list[dict], enriched: bool) -> str:
     lines = []
     emoji = screen.get("emoji", "📊")
     name = screen.get("name", screen.get("id", "Screen"))
-    lines.append(f"# {emoji} Screen: {name} ($50M–$10B)\n")
+    lines.append(f"# {emoji} Screen: {name} ({c.universe_label()})\n")
     lines.append(f"_{screen.get('description', '')}_\n")
     lines.append(f"**Results:** {len(quotes)}\n")
 

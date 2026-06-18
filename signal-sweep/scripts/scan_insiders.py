@@ -432,7 +432,8 @@ def _pct_of_outstanding(shares: float, shares_out: int | None) -> str:
 
 def _build_summary(purchases_by_ticker: dict[str, list[dict]],
                    clusters: list[dict], notable: list[dict],
-                   filings_13d: list[dict], mcap_data: dict) -> list[str]:
+                   filings_13d: list[dict], mcap_data: dict,
+                   zscore_threshold: float = 1.5) -> list[str]:
     """Build a summary header with key stats and sector breakdown."""
     lines = []
 
@@ -448,13 +449,13 @@ def _build_summary(purchases_by_ticker: dict[str, list[dict]],
     lines.append("## Summary\n")
     lines.append(f"| Metric | Value |")
     lines.append(f"|--------|-------|")
-    lines.append(f"| Purchases (code P, $50M\u2013$10B) | {total_purchases} |")
+    lines.append(f"| Purchases (code P, {c.universe_label()}) | {total_purchases} |")
     lines.append(f"| Unique tickers | {unique_tickers} |")
     lines.append(f"| Unique insiders | {unique_insiders} |")
     lines.append(f"| Total dollar volume | ${total_dollar:,.0f} |")
     lines.append(f"| Cluster buys | {len(clusters)} |")
-    lines.append(f"| Dip buys (\u2264 -1.5\u03c3) | {dip_count} |")
-    lines.append(f"| Rip buys (\u2265 +1.5\u03c3) | {rip_count} |")
+    lines.append(f"| Dip buys (\u2264 -{zscore_threshold}\u03c3) | {dip_count} |")
+    lines.append(f"| Rip buys (\u2265 +{zscore_threshold}\u03c3) | {rip_count} |")
     lines.append(f"| 13D filings | {len(filings_13d)} |")
     lines.append("")
 
@@ -498,7 +499,8 @@ def _build_summary(purchases_by_ticker: dict[str, list[dict]],
 def _build_markdown(purchases_by_ticker: dict[str, list[dict]],
                     clusters: list[dict], notable: list[dict],
                     filings_13d: list[dict], dates: list[str],
-                    mcap_data: dict) -> str:
+                    mcap_data: dict,
+                    zscore_threshold: float = 1.5) -> str:
     """Build Markdown output from scan results."""
     lines = []
     date_range = f"{dates[0]} to {dates[-1]}" if len(dates) > 1 else dates[0]
@@ -506,7 +508,8 @@ def _build_markdown(purchases_by_ticker: dict[str, list[dict]],
 
     # Summary header
     lines.extend(_build_summary(purchases_by_ticker, clusters, notable,
-                                filings_13d, mcap_data))
+                                filings_13d, mcap_data,
+                                zscore_threshold=zscore_threshold))
 
     # --- Cluster buys ---
     lines.append(f"## Cluster Buys ({len(clusters)} found)\n")
@@ -552,7 +555,7 @@ def _build_markdown(purchases_by_ticker: dict[str, list[dict]],
                      f"({len(rips)} rip, {len(dips)} dip)\n")
         lines.append("Volatility-adjusted: the 30-day return is measured against "
                      "the stock's own historical volatility. A z-score beyond "
-                     "±1.5σ flags the purchase as unusual.\n")
+                     f"±{zscore_threshold}σ flags the purchase as unusual.\n")
 
         if dips:
             lines.append("### 🔻 Dip Buys (buying into unusual weakness)\n")
@@ -591,7 +594,7 @@ def _build_markdown(purchases_by_ticker: dict[str, list[dict]],
     # --- 13D filings ---
     lines.append(f"## Activist 13D Filings ({len(filings_13d)} found)\n")
     if not filings_13d:
-        lines.append("No SC 13D / 13D/A filings in the $50M–$10B universe "
+        lines.append(f"No SC 13D / 13D/A filings in the {c.universe_label()} universe "
                      "for this window.\n")
     else:
         lines.append("| Ticker | Company | Market Cap | Filer | Date | Form |")
@@ -766,7 +769,7 @@ def main():
           f"{len(filings_13d)} 13D filings")
 
     md = _build_markdown(purchases, clusters, notable, filings_13d, dates,
-                          mcap_data)
+                          mcap_data, zscore_threshold=args.zscore)
     slug = end_date
     c.write_output(cache, "insiders", slug, md)
 

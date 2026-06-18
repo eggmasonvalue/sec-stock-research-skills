@@ -161,7 +161,7 @@ def _render_markdown(start: str, end: str, conferences: list[dict]) -> str:
     lines.append(f"# Conference Discovery ({start} to {end})\n")
     lines.append(
         f"Scanned 8-K Item 8.01 filings for conference-related announcements.\n"
-        f"Found **{len(conferences)}** companies in the $50M–$10B universe.\n"
+        f"Found **{len(conferences)}** companies in the {c.universe_label()} universe.\n"
     )
 
     if not conferences:

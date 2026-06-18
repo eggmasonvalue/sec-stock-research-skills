@@ -153,11 +153,11 @@ def _render_markdown(keyword: str, since: str, until: str,
     lines.append(f'# Theme Search: "{keyword}" (since {since})\n')
     lines.append(
         f"Found {total_unique} unique companies mentioning \"{keyword}\" in SEC filings.\n"
-        f"After universe filter ($50M–$10B): **{len(results)} companies**.\n"
+        f"After universe filter ({c.universe_label()}): **{len(results)} companies**.\n"
     )
 
     if not results:
-        lines.append("No companies in the $50M–$10B universe matched this search.\n")
+        lines.append(f"No companies in the {c.universe_label()} universe matched this search.\n")
         return "\n".join(lines)
 
     lines.append("| # | Ticker | Company | Sector | Mkt Cap | Price | Mentions | Most Recent Filing |")

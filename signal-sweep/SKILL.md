@@ -16,9 +16,11 @@ description: >-
 # Signal Sweep
 
 Top-of-funnel idea surfacing for long-only investors. Scans SEC filings and market data
-across the $50M–$10B US-listed universe (NYSE, NASDAQ, OTC) and produces shortlists of
+across a configurable US-listed universe (NYSE, NASDAQ, OTC) and produces shortlists of
 tickers with reasons. It sits upstream of the research stack — it *produces* tickers that
-`bottom-up-analyst` then deep-dives.
+`bottom-up-analyst` then deep-dives. The market-cap floor and ceiling are set in
+`screens.json` under `universe.market_cap_min` / `universe.market_cap_max` (default
+$50M–$10B); all scripts read from that file.
 
 ## Capabilities
 
@@ -64,7 +66,7 @@ python scripts/scan_market.py --list
 
 The 7 presets: `near-52wk-low`, `high-short-interest`, `short-covering`, `insider-heavy`,
 `fallen-from-grace`, `low-institutional`, `forgotten`. Each enriches the top results with
-P/E, short %, insider %, analyst rating, sector, and trailing returns. `--no-enrich` for
+P/E, short %, insider %, analyst rating, and sector. `--no-enrich` for
 faster runs. See `references/guide_screens.md` for the field reference and how to add
 custom screens.
 
@@ -79,7 +81,7 @@ python scripts/search_themes.py --keyword "cannabis" --since 2026-01-01
 python scripts/search_themes.py --keyword "tariff" --since 2025-01-01 --until 2026-06-17
 ```
 
-Results are deduplicated by company, filtered to the $50M–$10B universe, and enriched.
+Results are deduplicated by company, filtered to the configured universe, and enriched.
 
 ### 4. Conference discovery
 

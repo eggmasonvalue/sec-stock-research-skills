@@ -2,3 +2,6 @@
 .venv/
 __pycache__/
 *.pyc
+
+# Transcript cache (regenerated on demand)
+transcript-cache/

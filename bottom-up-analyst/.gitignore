@@ -5,3 +5,6 @@ __pycache__/
 
 # SEC cache (regenerated on demand by the data layer when the stack runs here)
 sec-cache/
+
+# Transcript cache (regenerated on demand by market-scout)
+transcript-cache/

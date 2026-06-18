@@ -162,10 +162,56 @@ def get_cached_shares_out(ticker: str, mcap_data: dict) -> int | None:
     return entry.get("shares_out")
 
 
-def in_universe(mcap: int | None, floor: int = 50_000_000, ceiling: int = 10_000_000_000) -> bool:
-    """Check whether a market cap falls within the scan universe."""
+# --- Universe bounds (from screens.json) -----------------------------------
+_SCREENS_JSON = Path(__file__).resolve().parent.parent / "screens.json"
+
+_universe_cache: dict | None = None
+
+
+def load_universe() -> dict:
+    """Load universe bounds from screens.json. Cached after first call.
+
+    Returns {"region": str, "market_cap_min": int, "market_cap_max": int}.
+    Falls back to hardcoded defaults only if screens.json is missing.
+    """
+    global _universe_cache
+    if _universe_cache is not None:
+        return _universe_cache
+    if _SCREENS_JSON.exists():
+        try:
+            data = json.loads(_SCREENS_JSON.read_text(encoding="utf-8"))
+            _universe_cache = data.get("universe", {})
+            return _universe_cache
+        except Exception:
+            pass
+    _universe_cache = {
+        "region": "us",
+        "market_cap_min": 50_000_000,
+        "market_cap_max": 10_000_000_000,
+    }
+    return _universe_cache
+
+
+def universe_label() -> str:
+    """Human-readable universe range, e.g. '$50M\u2013$10B'."""
+    u = load_universe()
+    lo = fmt_mcap(u.get("market_cap_min", 50_000_000))
+    hi = fmt_mcap(u.get("market_cap_max", 10_000_000_000))
+    return f"{lo}\u2013{hi}"
+
+
+def in_universe(mcap: int | None, floor: int | None = None, ceiling: int | None = None) -> bool:
+    """Check whether a market cap falls within the scan universe.
+
+    When floor/ceiling are not passed, reads them from screens.json.
+    """
     if mcap is None:
         return False
+    u = load_universe()
+    if floor is None:
+        floor = u.get("market_cap_min", 50_000_000)
+    if ceiling is None:
+        ceiling = u.get("market_cap_max", 10_000_000_000)
     return floor <= mcap <= ceiling
 
 
@@ -174,7 +220,8 @@ def fmt_mcap(mcap: int | None) -> str:
     if mcap is None:
         return "n/a"
     if mcap >= 1_000_000_000:
-        return f"${mcap / 1_000_000_000:.1f}B"
+        val = mcap / 1_000_000_000
+        return f"${val:.0f}B" if val == int(val) else f"${val:.1f}B"
     if mcap >= 1_000_000:
         return f"${mcap / 1_000_000:.0f}M"
     return f"${mcap:,.0f}"

@@ -9,6 +9,9 @@ sec-cache/
 # Signal-sweep output cache (regenerated on demand)
 signal-sweep-cache/
 
+# Transcript cache (market-scout, regenerated on demand)
+transcript-cache/
+
 # OS cruft
 .DS_Store
 Thumbs.db
