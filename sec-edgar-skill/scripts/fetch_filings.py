@@ -5,6 +5,7 @@ absolute path printed to stdout. With ``--attachments`` each filing's text
 attachments are saved alongside it (e.g. a 6-K's Exhibit 99.1). Run ``--help``
 for all flags.
 """
+
 import argparse
 import sys
 
@@ -19,8 +20,9 @@ def main():
     p.add_argument("--form", required=True, help="Form type, e.g. 10-Q, 8-K, 6-K.")
     p.add_argument("--start-year", type=int, help="First calendar year (inclusive).")
     p.add_argument("--end-year", type=int, help="Last calendar year (inclusive).")
-    p.add_argument("--attachments", action="store_true",
-                   help="Also save each filing's text attachments.")
+    p.add_argument(
+        "--attachments", action="store_true", help="Also save each filing's text attachments."
+    )
     c.add_identity_arg(p)
     c.add_cache_arg(p)
     args = p.parse_args()

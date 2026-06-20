@@ -23,6 +23,7 @@ Output is written to ``<cache>/<TICKER>/insider-trades_<START>_<END>.md``
 (or ``insider-buys_...`` with --buys-only). The absolute path is emitted to
 stdout; progress goes to stderr.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -82,11 +83,13 @@ def _fmt_value(shares, price) -> str:
 def _parse_date(s: str) -> date:
     """Parse YYYY-MM-DD into a date object."""
     from datetime import datetime as dt
+
     return dt.strptime(s, "%Y-%m-%d").date()
 
 
-def fetch_insider_trades(ticker: str, start: date, end: date,
-                         buys_only: bool = False) -> list[dict]:
+def fetch_insider_trades(
+    ticker: str, start: date, end: date, buys_only: bool = False
+) -> list[dict]:
     """Fetch and parse Form 4 filings for a ticker within [start, end].
 
     Returns a list of transaction dicts, newest first.
@@ -143,18 +146,22 @@ def fetch_insider_trades(ticker: str, start: date, end: date,
             if buys_only and code != "P":
                 continue
 
-            transactions.append({
-                "date": filing_date,
-                "insider": str(insider_name),
-                "role": str(position),
-                "code": str(code or ""),
-                "type": _code_label(code),
-                "shares": shares,
-                "price": price,
-                "remaining": remaining,
-                "accession": (getattr(filing, "accession_no", "")
-                              or getattr(filing, "accession_number", "")),
-            })
+            transactions.append(
+                {
+                    "date": filing_date,
+                    "insider": str(insider_name),
+                    "role": str(position),
+                    "code": str(code or ""),
+                    "type": _code_label(code),
+                    "shares": shares,
+                    "price": price,
+                    "remaining": remaining,
+                    "accession": (
+                        getattr(filing, "accession_no", "")
+                        or getattr(filing, "accession_number", "")
+                    ),
+                }
+            )
 
         parsed += 1
         if parsed % 25 == 0:
@@ -163,13 +170,13 @@ def fetch_insider_trades(ticker: str, start: date, end: date,
     if errors > 0:
         c.log(f"  ({errors} filings could not be parsed)")
 
-    c.log(f"  Parsed {parsed} Form 4 filings, "
-          f"found {len(transactions)} transactions.")
+    c.log(f"  Parsed {parsed} Form 4 filings, found {len(transactions)} transactions.")
     return transactions
 
 
-def _build_markdown(ticker: str, transactions: list[dict],
-                    start: date, end: date, buys_only: bool) -> str:
+def _build_markdown(
+    ticker: str, transactions: list[dict], start: date, end: date, buys_only: bool
+) -> str:
     """Build a Markdown summary of insider transactions."""
     lines = []
     lines.append(f"# Insider Transactions: {ticker}")
@@ -186,10 +193,12 @@ def _build_markdown(ticker: str, transactions: list[dict],
     sells = [t for t in transactions if t["code"] == "S"]
     exercises = [t for t in transactions if t["code"] == "M"]
 
-    buy_value = sum(abs(t["shares"] * (t["price"] or 0))
-                    for t in buys if t["shares"] and t["price"])
-    sell_value = sum(abs(t["shares"] * (t["price"] or 0))
-                     for t in sells if t["shares"] and t["price"])
+    buy_value = sum(
+        abs(t["shares"] * (t["price"] or 0)) for t in buys if t["shares"] and t["price"]
+    )
+    sell_value = sum(
+        abs(t["shares"] * (t["price"] or 0)) for t in sells if t["shares"] and t["price"]
+    )
 
     unique_buyers = set(t["insider"] for t in buys)
     unique_sellers = set(t["insider"] for t in sells)
@@ -218,10 +227,8 @@ def _build_markdown(ticker: str, transactions: list[dict],
     label = "Open-Market Purchases" if buys_only else "All Transactions"
     lines.append(f"## {label}")
     lines.append("")
-    lines.append("| Date | Insider | Role | Type | Shares | Price "
-                 "| Value | Remaining |")
-    lines.append("|------|---------|------|------|--------|-------"
-                 "|-------|-----------|")
+    lines.append("| Date | Insider | Role | Type | Shares | Price | Value | Remaining |")
+    lines.append("|------|---------|------|------|--------|-------|-------|-----------|")
 
     for t in transactions:
         lines.append(
@@ -244,14 +251,11 @@ def _build_markdown(ticker: str, transactions: list[dict],
         for t in buys:
             key = t["insider"]
             if key not in buyer_data:
-                buyer_data[key] = {"role": t["role"], "count": 0,
-                                   "shares": 0, "value": 0}
+                buyer_data[key] = {"role": t["role"], "count": 0, "shares": 0, "value": 0}
             buyer_data[key]["count"] += 1
             buyer_data[key]["shares"] += abs(t["shares"] or 0)
-            buyer_data[key]["value"] += abs((t["shares"] or 0)
-                                            * (t["price"] or 0))
-        for name, d in sorted(buyer_data.items(),
-                               key=lambda x: x[1]["value"], reverse=True):
+            buyer_data[key]["value"] += abs((t["shares"] or 0) * (t["price"] or 0))
+        for name, d in sorted(buyer_data.items(), key=lambda x: x[1]["value"], reverse=True):
             lines.append(
                 f"| {name} | {d['role']} | {d['count']} "
                 f"| {_fmt_shares(d['shares'])} "
@@ -263,17 +267,13 @@ def _build_markdown(ticker: str, transactions: list[dict],
 
 
 def main():
-    p = argparse.ArgumentParser(
-        description="Fetch insider transactions (Form 4) for a company."
+    p = argparse.ArgumentParser(description="Fetch insider transactions (Form 4) for a company.")
+    p.add_argument("--ticker", required=True, help="Stock ticker to look up.")
+    p.add_argument("--start", help="Start date YYYY-MM-DD (default: 12 months ago).")
+    p.add_argument("--end", help="End date YYYY-MM-DD (default: today).")
+    p.add_argument(
+        "--buys-only", action="store_true", help="Show only open-market purchases (code P)."
     )
-    p.add_argument("--ticker", required=True,
-                   help="Stock ticker to look up.")
-    p.add_argument("--start",
-                   help="Start date YYYY-MM-DD (default: 12 months ago).")
-    p.add_argument("--end",
-                   help="End date YYYY-MM-DD (default: today).")
-    p.add_argument("--buys-only", action="store_true",
-                   help="Show only open-market purchases (code P).")
     c.add_identity_arg(p)
     c.add_cache_arg(p)
     args = p.parse_args()
@@ -288,9 +288,7 @@ def main():
         c.log("ERROR: --start is after --end.")
         sys.exit(1)
 
-    transactions = fetch_insider_trades(
-        args.ticker, start=start, end=end, buys_only=args.buys_only
-    )
+    transactions = fetch_insider_trades(args.ticker, start=start, end=end, buys_only=args.buys_only)
 
     md = _build_markdown(args.ticker, transactions, start, end, args.buys_only)
 

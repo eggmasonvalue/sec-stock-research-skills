@@ -15,6 +15,7 @@ EPV (enterprise) = normalized NOPAT / WACC, where NOPAT = adjusted EBIT x (1 - t
 With the optional Greenwald refinement (``--da`` and ``--maint-capex``), adjusted EBIT adds back
 the portion of depreciation that exceeds true maintenance capex — earnings the accounting hides.
 """
+
 import argparse
 import sys
 
@@ -30,24 +31,46 @@ def main():
         description=__doc__.splitlines()[0],
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
-    p.add_argument("--ebit", type=float, required=True,
-                   help="Normalized operating earnings (EBIT) in $M. For cyclicals use "
-                        "mid-cycle EBIT, not the latest year.")
+    p.add_argument(
+        "--ebit",
+        type=float,
+        required=True,
+        help="Normalized operating earnings (EBIT) in $M. For cyclicals use "
+        "mid-cycle EBIT, not the latest year.",
+    )
     p.add_argument("--tax", type=float, default=21.0, help="Cash tax rate %% (default 21).")
-    p.add_argument("--wacc", type=float, required=True,
-                   help="Cost of capital %% used to capitalize earnings.")
-    p.add_argument("--shares", type=float, required=True,
-                   help="Diluted shares, same unit as --ebit (e.g. millions).")
-    p.add_argument("--net-debt", type=float, default=0.0,
-                   help="Net debt in $M (negative = net cash).")
-    p.add_argument("--da", type=float, default=None,
-                   help="Depreciation & amortization in $M (optional, for the maintenance-capex "
-                        "refinement; use with --maint-capex).")
-    p.add_argument("--maint-capex", type=float, default=None,
-                   help="Maintenance capex in $M (optional). If D&A exceeds it, the excess is "
-                        "added back to EBIT as hidden earning power.")
-    p.add_argument("--price", type=float, default=None,
-                   help="Current price/share (optional) to print EPV vs price.")
+    p.add_argument(
+        "--wacc", type=float, required=True, help="Cost of capital %% used to capitalize earnings."
+    )
+    p.add_argument(
+        "--shares",
+        type=float,
+        required=True,
+        help="Diluted shares, same unit as --ebit (e.g. millions).",
+    )
+    p.add_argument(
+        "--net-debt", type=float, default=0.0, help="Net debt in $M (negative = net cash)."
+    )
+    p.add_argument(
+        "--da",
+        type=float,
+        default=None,
+        help="Depreciation & amortization in $M (optional, for the maintenance-capex "
+        "refinement; use with --maint-capex).",
+    )
+    p.add_argument(
+        "--maint-capex",
+        type=float,
+        default=None,
+        help="Maintenance capex in $M (optional). If D&A exceeds it, the excess is "
+        "added back to EBIT as hidden earning power.",
+    )
+    p.add_argument(
+        "--price",
+        type=float,
+        default=None,
+        help="Current price/share (optional) to print EPV vs price.",
+    )
     args = p.parse_args()
 
     if args.wacc <= 0:
@@ -61,8 +84,10 @@ def main():
     if args.da is not None and args.maint_capex is not None:
         excess = args.da - args.maint_capex
         adj_ebit = args.ebit + excess
-        note = (f" (adjusted from {args.ebit:,.0f} by D&A {args.da:,.0f} − maint capex "
-                f"{args.maint_capex:,.0f} = {excess:+,.0f})")
+        note = (
+            f" (adjusted from {args.ebit:,.0f} by D&A {args.da:,.0f} − maint capex "
+            f"{args.maint_capex:,.0f} = {excess:+,.0f})"
+        )
 
     nopat = adj_ebit * (1 - tax)
     epv_enterprise = nopat / wacc
@@ -77,10 +102,12 @@ def main():
     print(f"\n## EPV / share (no growth): **{epv_share:,.2f}**")
     if args.price is not None:
         gap = (args.price / epv_share - 1) * 100 if epv_share > 0 else float("nan")
-        print(f"\nAt {args.price:,.2f}/share, the market pays **{gap:+.0f}%** versus the "
-              "no-growth value. That premium is what you are paying for growth and "
-              "improvement — decide whether the business can deliver it. A price *below* EPV "
-              "means the market assigns the growth (and maybe some of the base) negative value.")
+        print(
+            f"\nAt {args.price:,.2f}/share, the market pays **{gap:+.0f}%** versus the "
+            "no-growth value. That premium is what you are paying for growth and "
+            "improvement — decide whether the business can deliver it. A price *below* EPV "
+            "means the market assigns the growth (and maybe some of the base) negative value."
+        )
 
 
 if __name__ == "__main__":

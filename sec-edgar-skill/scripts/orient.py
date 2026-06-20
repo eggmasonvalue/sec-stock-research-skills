@@ -11,6 +11,7 @@ forms instead of assuming a form set from memory. The output is neutral — it s
 the filing history and leaves what is significant to you (or the framework driving
 you) to decide.
 """
+
 import argparse
 import datetime as _dt
 import sys
@@ -21,11 +22,15 @@ import _common as c
 def main():
     p = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     p.add_argument("--ticker", required=True, help="Ticker, CIK, or company name.")
-    p.add_argument("--years", type=int, default=3,
-                   help="Survey the filing mix over the last N calendar years "
-                        "(default: 3).")
-    p.add_argument("--recent", type=int, default=15,
-                   help="Also list the N most recent filings (default: 15).")
+    p.add_argument(
+        "--years",
+        type=int,
+        default=3,
+        help="Survey the filing mix over the last N calendar years (default: 3).",
+    )
+    p.add_argument(
+        "--recent", type=int, default=15, help="Also list the N most recent filings (default: 15)."
+    )
     c.add_identity_arg(p)
     args = p.parse_args()
 

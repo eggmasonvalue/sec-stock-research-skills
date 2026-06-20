@@ -24,6 +24,7 @@ All output is written to the cache and the absolute path is emitted to stdout:
 
 Data source: https://13f.info (public, no API key needed).
 """
+
 from __future__ import annotations
 
 import argparse
@@ -32,7 +33,7 @@ import sys
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
-import _common as c  # noqa: F401  (sets UTF-8 stdout, injects truststore)
+import _common as c
 
 _BASE = "https://13f.info"
 _UA = (
@@ -44,6 +45,7 @@ _UA = (
 # ---------------------------------------------------------------------------
 # HTTP / JSON helpers
 # ---------------------------------------------------------------------------
+
 
 def _get_json(url: str) -> dict | list | None:
     """Fetch a JSON endpoint, return parsed data or None on failure."""
@@ -84,6 +86,7 @@ def _get_html(url: str) -> str:
 def _autocomplete(query: str) -> dict | None:
     """Search for managers and CUSIPs by name/ticker."""
     from urllib.parse import quote
+
     return _get_json(f"{_BASE}/data/autocomplete?q={quote(query)}")
 
 
@@ -100,6 +103,7 @@ def _manager_cusip_history(cik: str, cusip: str) -> dict | None:
 # ---------------------------------------------------------------------------
 # Resolve ticker → CUSIP via autocomplete
 # ---------------------------------------------------------------------------
+
 
 def _resolve_cusip(ticker: str) -> tuple[str, str, str] | None:
     """Resolve a ticker to (cusip, symbol, issuer_name) via autocomplete.
@@ -150,6 +154,7 @@ def _resolve_manager(query: str) -> tuple[str, str] | None:
 # Formatting helpers
 # ---------------------------------------------------------------------------
 
+
 def _fmt_shares(s: int | float | None) -> str:
     if s is None:
         return "n/a"
@@ -170,8 +175,10 @@ def _fmt_pct(p: float | None) -> str:
 # Output: Stock-centric (who owns this stock?)
 # ---------------------------------------------------------------------------
 
-def _build_stock_holders(ticker: str, cusip: str, issuer: str,
-                         year: int, quarter: int, top_n: int) -> str | None:
+
+def _build_stock_holders(
+    ticker: str, cusip: str, issuer: str, year: int, quarter: int, top_n: int
+) -> str | None:
     """Build Markdown for the top institutional holders in a given quarter.
 
     Returns the Markdown string, or None if no data is available.
@@ -215,12 +222,11 @@ def _build_stock_holders(ticker: str, cusip: str, issuer: str,
         name = manager_info[0] if isinstance(manager_info, list) else str(manager_info)
         cik = manager_info[1] if isinstance(manager_info, list) and len(manager_info) > 1 else ""
 
-        lines.append(f"| {i+1} | {name} | {_fmt_shares(shares)} | {cik} |")
+        lines.append(f"| {i + 1} | {name} | {_fmt_shares(shares)} | {cik} |")
 
     if len(holders) > top_n:
         lines.append("")
-        lines.append(f"*Showing top {top_n} of {len(holders)} holders. "
-                     f"Use --top to adjust.*")
+        lines.append(f"*Showing top {top_n} of {len(holders)} holders. Use --top to adjust.*")
 
     return "\n".join(lines)
 
@@ -249,12 +255,12 @@ def _build_stock_history(ticker: str, cusip: str, issuer: str) -> str | None:
     # Parse the HTML table rows — each row has 5 <td> cells:
     # period (with link), filings, shares, value, options value
     row_pattern = re.compile(
-        r'<tr[^>]*>\s*'
-        r'<td[^>]*>\s*<a[^>]*>(\d{4}\s+Q\d)</a>\s*</td>\s*'  # period
-        r'<td[^>]*>\s*(\d+)\s*</td>\s*'                        # filings
-        r'<td[^>]*>\s*([^<]+?)\s*</td>\s*'                     # shares
-        r'<td[^>]*>\s*([^<]+?)\s*</td>',                        # value
-        re.DOTALL
+        r"<tr[^>]*>\s*"
+        r"<td[^>]*>\s*<a[^>]*>(\d{4}\s+Q\d)</a>\s*</td>\s*"  # period
+        r"<td[^>]*>\s*(\d+)\s*</td>\s*"  # filings
+        r"<td[^>]*>\s*([^<]+?)\s*</td>\s*"  # shares
+        r"<td[^>]*>\s*([^<]+?)\s*</td>",  # value
+        re.DOTALL,
     )
 
     lines.append("| Period | Holders | Shares (excl. options) |")
@@ -272,6 +278,7 @@ def _build_stock_history(ticker: str, cusip: str, issuer: str) -> str | None:
 # ---------------------------------------------------------------------------
 # Output: Manager-centric (what does this fund hold?)
 # ---------------------------------------------------------------------------
+
 
 def _build_manager_holdings(cik: str, manager_name: str) -> str | None:
     """Build Markdown for a manager's filing history (scraped from HTML).
@@ -311,12 +318,12 @@ def _build_manager_holdings(cik: str, manager_name: str) -> str | None:
     # Quarter (link), Holdings, Value, Top Holdings (title attr), Form Type, Date Filed, Filing ID
     row_pattern = re.compile(
         r'<a[^>]*href="(/13f/[^"]+)"[^>]*>\s*(Q\d\s+\d{4})\s*</a>'
-        r'.*?<td[^>]*>\s*(\d+)\s*</td>'                  # holdings
-        r'.*?<td[^>]*>\s*([\d,]+)\s*</td>'                # value
-        r'.*?<td[^>]*title="([^"]*)"[^>]*>.*?</td>'       # top holdings (title attr)
-        r'.*?<td[^>]*title="([^"]*)"[^>]*>.*?</td>'       # form type (title attr)
-        r'.*?<td[^>]*>\s*([\d/]+)\s*</td>',               # date filed
-        re.DOTALL
+        r".*?<td[^>]*>\s*(\d+)\s*</td>"  # holdings
+        r".*?<td[^>]*>\s*([\d,]+)\s*</td>"  # value
+        r'.*?<td[^>]*title="([^"]*)"[^>]*>.*?</td>'  # top holdings (title attr)
+        r'.*?<td[^>]*title="([^"]*)"[^>]*>.*?</td>'  # form type (title attr)
+        r".*?<td[^>]*>\s*([\d/]+)\s*</td>",  # date filed
+        re.DOTALL,
     )
 
     lines.append("| Quarter | Holdings | Top Holdings | Type | Filed |")
@@ -345,8 +352,10 @@ def _build_manager_holdings(cik: str, manager_name: str) -> str | None:
 # Output: Cross-reference (manager × stock history)
 # ---------------------------------------------------------------------------
 
-def _build_manager_stock_history(cik: str, cusip: str,
-                                  manager_name: str, ticker: str) -> str | None:
+
+def _build_manager_stock_history(
+    cik: str, cusip: str, manager_name: str, ticker: str
+) -> str | None:
     """Build Markdown for a specific manager's position history for a stock.
 
     Returns the Markdown string, or None if no data is available.
@@ -386,6 +395,7 @@ def _build_manager_stock_history(cik: str, cusip: str,
 # Determine latest quarter
 # ---------------------------------------------------------------------------
 
+
 def _latest_quarter() -> tuple[int, int]:
     """Return the most recent likely 13F quarter with data available.
 
@@ -395,16 +405,19 @@ def _latest_quarter() -> tuple[int, int]:
     Dec 31.
     """
     from datetime import date, timedelta
+
     today = date.today()
     # Quarter end dates for the current and previous year
     quarters = []
     for y in [today.year, today.year - 1]:
-        quarters.extend([
-            (date(y, 3, 31), y, 1),
-            (date(y, 6, 30), y, 2),
-            (date(y, 9, 30), y, 3),
-            (date(y, 12, 31), y, 4),
-        ])
+        quarters.extend(
+            [
+                (date(y, 3, 31), y, 1),
+                (date(y, 6, 30), y, 2),
+                (date(y, 9, 30), y, 3),
+                (date(y, 12, 31), y, 4),
+            ]
+        )
     # Sort descending and find the most recent quarter that ended 50+ days ago
     quarters.sort(key=lambda x: x[0], reverse=True)
     for end_date, year, q in quarters:
@@ -418,20 +431,29 @@ def _latest_quarter() -> tuple[int, int]:
 # Main
 # ---------------------------------------------------------------------------
 
+
 def main():
-    p = argparse.ArgumentParser(
-        description="Fetch 13F institutional holder data from 13f.info."
-    )
+    p = argparse.ArgumentParser(description="Fetch 13F institutional holder data from 13f.info.")
     # Stock-centric
     p.add_argument("--ticker", help="Stock ticker to look up holders for.")
-    p.add_argument("--history", action="store_true",
-                   help="Show quarterly holder/share-count history (with --ticker).")
-    p.add_argument("--year", type=int, default=None,
-                   help="Specific year for holder lookup (default: latest).")
-    p.add_argument("--quarter", type=int, default=None, choices=[1, 2, 3, 4],
-                   help="Specific quarter (1-4) for holder lookup.")
-    p.add_argument("--top", type=int, default=25,
-                   help="Number of top holders to show (default: 25).")
+    p.add_argument(
+        "--history",
+        action="store_true",
+        help="Show quarterly holder/share-count history (with --ticker).",
+    )
+    p.add_argument(
+        "--year", type=int, default=None, help="Specific year for holder lookup (default: latest)."
+    )
+    p.add_argument(
+        "--quarter",
+        type=int,
+        default=None,
+        choices=[1, 2, 3, 4],
+        help="Specific quarter (1-4) for holder lookup.",
+    )
+    p.add_argument(
+        "--top", type=int, default=25, help="Number of top holders to show (default: 25)."
+    )
 
     # Manager-centric
     p.add_argument("--manager", help="Manager name to search for.")

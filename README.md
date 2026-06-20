@@ -77,7 +77,7 @@ SUM:                            61           2473            631           6520
 
 ## Install
 
-Install the whole stack, or any single skill on its own - point your agent at 
+Install the whole stack, or any single skill on its own - point your agent at
 this repository, or at a single skill subfolder. Each skill is a self-contained
 folder with its own `SKILL.md`.
 

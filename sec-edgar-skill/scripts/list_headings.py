@@ -9,6 +9,7 @@ This keys on Markdown ``#`` headers, so it maps periodic/current reports
 proxies) convert with few ``#`` headers — for those, read the table of contents
 in the filing's opening lines and grep instead.
 """
+
 import argparse
 import sys
 from pathlib import Path

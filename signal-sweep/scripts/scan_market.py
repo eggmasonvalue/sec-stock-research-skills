@@ -9,6 +9,7 @@ Usage:
     python scripts/scan_market.py --all
     python scripts/scan_market.py --list
 """
+
 from __future__ import annotations
 
 import argparse
@@ -36,11 +37,12 @@ def _build_query(screen: dict, universe: dict):
     conditions = [
         yf.EquityQuery("eq", ["region", universe.get("region", "us")]),
         yf.EquityQuery("gte", ["intradaymarketcap", universe.get("market_cap_min", 50_000_000)]),
-        yf.EquityQuery("lte", ["intradaymarketcap", universe.get("market_cap_max", 10_000_000_000)]),
+        yf.EquityQuery(
+            "lte", ["intradaymarketcap", universe.get("market_cap_max", 10_000_000_000)]
+        ),
     ]
 
-    op_map = {"eq": "eq", "lte": "lte", "gte": "gte", "lt": "lt", "gt": "gt",
-              "btwn": "btwn"}
+    op_map = {"eq": "eq", "lte": "lte", "gte": "gte", "lt": "lt", "gt": "gt", "btwn": "btwn"}
 
     for f in screen.get("filters", []):
         op = op_map.get(f["op"], f["op"])
@@ -59,7 +61,7 @@ def _enrich(quotes: list[dict], size: int) -> list[dict]:
     enriched = []
     for i, q in enumerate(quotes[:size]):
         symbol = q.get("symbol", "")
-        c.log(f"  Enriching {i+1}/{min(size, len(quotes))}: {symbol}")
+        c.log(f"  Enriching {i + 1}/{min(size, len(quotes))}: {symbol}")
         try:
             info = yf.Ticker(symbol).info or {}
         except Exception:
@@ -86,6 +88,7 @@ def _enrich(quotes: list[dict], size: int) -> list[dict]:
                 close = hist["Close"].dropna()
                 last = close.iloc[-1]
                 import pandas as pd
+
                 last_date = close.index[-1]
                 # 2Y return
                 prior_2y = close[close.index <= last_date - pd.Timedelta(days=730)]
@@ -130,8 +133,12 @@ def _render_markdown(screen: dict, quotes: list[dict], enriched: bool) -> str:
         return "\n".join(lines)
 
     if enriched:
-        lines.append("| # | Ticker | Company | Price | Mkt Cap | P/E | Short % | Insider % | Inst % | Analyst | Sector |")
-        lines.append("|---|--------|---------|-------|---------|-----|---------|-----------|--------|---------|--------|")
+        lines.append(
+            "| # | Ticker | Company | Price | Mkt Cap | P/E | Short % | Insider % | Inst % | Analyst | Sector |"
+        )
+        lines.append(
+            "|---|--------|---------|-------|---------|-----|---------|-----------|--------|---------|--------|"
+        )
         for i, q in enumerate(quotes, 1):
             ticker = q.get("symbol", "?")
             company = q.get("shortName") or q.get("longName") or "?"

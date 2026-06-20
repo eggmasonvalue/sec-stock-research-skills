@@ -5,6 +5,7 @@ parses its XBRL, and writes each statement to
 ``<cache>/<TICKER>/<FORM>_<DATE>_<ACCESSION>__<statement>.csv``. Prints the
 absolute path(s) to stdout. Run ``--help`` for all flags.
 """
+
 import argparse
 import sys
 
@@ -22,10 +23,22 @@ def main():
     p = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     p.add_argument("--ticker", required=True, help="Ticker, CIK, or company name.")
     p.add_argument("--year", type=int, required=True, help="Calendar year of the report.")
-    p.add_argument("--quarter", type=int, choices=[1, 2, 3, 4], help="Calendar quarter of the report (for 10-Q / 6-K).")
-    p.add_argument("--form", help="Form type, e.g. 10-K, 10-Q, 20-F, 40-F, 6-K. Defaults to 10-Q/6-K if quarter is specified, otherwise annual reports.")
-    p.add_argument("--statement", choices=["income", "balance", "cashflow", "all"],
-                   default="all", help="Which statement(s) to extract (default: all).")
+    p.add_argument(
+        "--quarter",
+        type=int,
+        choices=[1, 2, 3, 4],
+        help="Calendar quarter of the report (for 10-Q / 6-K).",
+    )
+    p.add_argument(
+        "--form",
+        help="Form type, e.g. 10-K, 10-Q, 20-F, 40-F, 6-K. Defaults to 10-Q/6-K if quarter is specified, otherwise annual reports.",
+    )
+    p.add_argument(
+        "--statement",
+        choices=["income", "balance", "cashflow", "all"],
+        default="all",
+        help="Which statement(s) to extract (default: all).",
+    )
     c.add_identity_arg(p)
     c.add_cache_arg(p)
     args = p.parse_args()
@@ -40,15 +53,23 @@ def main():
     else:
         forms = ["10-K", "20-F", "40-F"]
 
-    c.log(f"Finding report ({'/'.join(forms)}) for {args.year}" + (f" Q{args.quarter}" if args.quarter else "") + " ...")
-    
+    c.log(
+        f"Finding report ({'/'.join(forms)}) for {args.year}"
+        + (f" Q{args.quarter}" if args.quarter else "")
+        + " ..."
+    )
+
     kwargs = {"form": forms, "year": args.year, "amendments": False}
     if args.quarter:
         kwargs["quarter"] = args.quarter
-        
+
     filings = company.get_filings(**kwargs)
     if len(filings) == 0:
-        c.log(f"No report found for {args.year}" + (f" Q{args.quarter}" if args.quarter else "") + f" of type {forms}; falling back to most recent.")
+        c.log(
+            f"No report found for {args.year}"
+            + (f" Q{args.quarter}" if args.quarter else "")
+            + f" of type {forms}; falling back to most recent."
+        )
         kwargs_fallback = {"form": forms, "amendments": False}
         filings = company.get_filings(**kwargs_fallback)
     if len(filings) == 0:
@@ -74,8 +95,10 @@ def main():
         c.log(f"ERROR: no filings with parsed XBRL data found for {args.ticker} in this period.")
         sys.exit(1)
 
-    c.log(f"Resolved {filing.form} filed {filing.filing_date} "
-          f"(accession {filing.accession_no}) containing XBRL data.")
+    c.log(
+        f"Resolved {filing.form} filed {filing.filing_date} "
+        f"(accession {filing.accession_no}) containing XBRL data."
+    )
 
     wanted = ["income", "balance", "cashflow"] if args.statement == "all" else [args.statement]
     out_dir = c.company_dir(c.cache_root(args.cache_dir), company, ticker_hint=args.ticker)

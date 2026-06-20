@@ -6,13 +6,13 @@ it is never cached to disk. Two modes compose: a per-name snapshot, and (with
 ``--industry`` / ``--peers``) a sector view useful as a discovery top-of-funnel.
 Run ``--help`` for all flags.
 """
+
 import argparse
 import sys
 
-import _common as c  # noqa: F401  (import sets UTF-8 stdout on Windows)
+import _common as c
 
-_RETURN_WINDOWS = [("1M", 30), ("3M", 91), ("6M", 182),
-                   ("1Y", 365), ("3Y", 1095), ("5Y", 1825)]
+_RETURN_WINDOWS = [("1M", 30), ("3M", 91), ("6M", 182), ("1Y", 365), ("3Y", 1095), ("5Y", 1825)]
 
 
 def _num(v, money=False, pct=False):
@@ -37,8 +37,8 @@ def main():
     args = p.parse_args()
 
     try:
-        import yfinance as yf
         import pandas as pd
+        import yfinance as yf
     except Exception as exc:
         c.log(f"ERROR: yfinance/pandas not installed: {exc}")
         sys.exit(1)
@@ -55,11 +55,14 @@ def main():
     print(f"- Price: {_num(info.get('currentPrice'))}")
     print(f"- Market cap: {_num(info.get('marketCap'), money=True)}")
     print(f"- Shares outstanding: {_num(info.get('sharesOutstanding'), money=True)}")
-    print(f"- 52-week high / low: {_num(info.get('fiftyTwoWeekHigh'))} / "
-          f"{_num(info.get('fiftyTwoWeekLow'))}")
+    print(
+        f"- 52-week high / low: {_num(info.get('fiftyTwoWeekHigh'))} / "
+        f"{_num(info.get('fiftyTwoWeekLow'))}"
+    )
     if info.get("sector") or info.get("industry"):
-        print(f"- Sector / industry: {info.get('sector') or 'n/a'} / "
-              f"{info.get('industry') or 'n/a'}")
+        print(
+            f"- Sector / industry: {info.get('sector') or 'n/a'} / {info.get('industry') or 'n/a'}"
+        )
 
     try:
         close = ticker.history(period=args.period)["Close"].dropna()

@@ -1,4 +1,5 @@
 """Minimal shared runtime setup for market-scout scripts."""
+
 import sys
 
 # yfinance/pandas can emit non-ASCII text (e.g. company names like "Société");

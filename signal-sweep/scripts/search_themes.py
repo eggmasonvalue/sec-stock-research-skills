@@ -8,6 +8,7 @@ Usage:
     python scripts/search_themes.py --keyword "cannabis" --since 2026-01-01
     python scripts/search_themes.py --keyword "tariff" --since 2025-01-01 --until 2026-06-17
 """
+
 from __future__ import annotations
 
 import argparse
@@ -22,7 +23,7 @@ import _common as c
 
 def _extract_ticker_from_company(company_str: str) -> str | None:
     """Try to extract ticker from EFTS company string like 'SNDL Inc.  (SNDL)  (CIK ...)'."""
-    m = re.search(r'\(([A-Z]{1,5})\)', company_str)
+    m = re.search(r"\(([A-Z]{1,5})\)", company_str)
     if m:
         return m.group(1)
     return None
@@ -32,17 +33,19 @@ def _resolve_ticker_for_cik(cik: str) -> str | None:
     """Try to resolve a ticker from a CIK via edgartools."""
     try:
         from edgar import Company
+
         co = Company(int(cik.lstrip("0")))
         tickers = getattr(co, "tickers", [])
         if tickers:
-            return list(tickers)[0]
+            return next(iter(tickers))
     except Exception:
         pass
     return None
 
 
-def search_and_filter(keyword: str, since: str, until: str, limit: int,
-                      cache: Path, mcap_data: dict) -> tuple[list[dict], int]:
+def search_and_filter(
+    keyword: str, since: str, until: str, limit: int, cache: Path, mcap_data: dict
+) -> tuple[list[dict], int]:
     """Search EFTS, deduplicate, filter to universe, enrich.
 
     Returns (enriched_results, total_unique_before_filter).
@@ -53,7 +56,9 @@ def search_and_filter(keyword: str, since: str, until: str, limit: int,
 
     # EFTS search — both start_date AND end_date must be provided together
     try:
-        results = edgar.search_filings(keyword, start_date=since, end_date=until, limit=min(limit, 100))
+        results = edgar.search_filings(
+            keyword, start_date=since, end_date=until, limit=min(limit, 100)
+        )
     except Exception as exc:
         c.log(f"ERROR: EFTS search failed: {exc}")
         return [], 0
@@ -72,7 +77,9 @@ def search_and_filter(keyword: str, since: str, until: str, limit: int,
             c.log(f"  WARNING: fetch_more failed: {exc}")
 
     # Deduplicate by CIK -> collect mention counts and most recent filing
-    companies: dict[str, dict] = {}  # cik -> {company, cik, mentions, forms, latest_date, latest_form}
+    companies: dict[
+        str, dict
+    ] = {}  # cik -> {company, cik, mentions, forms, latest_date, latest_form}
     for r in results:
         cik = str(getattr(r, "cik", "")).lstrip("0")
         if not cik:
@@ -123,35 +130,41 @@ def search_and_filter(keyword: str, since: str, until: str, limit: int,
 
         # Enrich with yfinance data
         import yfinance as yf
+
         try:
             yf_info = yf.Ticker(ticker).info or {}
         except Exception:
             yf_info = {}
 
-        enriched.append({
-            "ticker": ticker,
-            "company": yf_info.get("shortName") or yf_info.get("longName") or info["company_raw"],
-            "sector": yf_info.get("sector", "n/a"),
-            "industry": yf_info.get("industry", "n/a"),
-            "mcap": mcap,
-            "price": yf_info.get("currentPrice"),
-            "mentions": info["mentions"],
-            "latest_date": info["latest_date"],
-            "latest_form": info["latest_form"],
-        })
+        enriched.append(
+            {
+                "ticker": ticker,
+                "company": yf_info.get("shortName")
+                or yf_info.get("longName")
+                or info["company_raw"],
+                "sector": yf_info.get("sector", "n/a"),
+                "industry": yf_info.get("industry", "n/a"),
+                "mcap": mcap,
+                "price": yf_info.get("currentPrice"),
+                "mentions": info["mentions"],
+                "latest_date": info["latest_date"],
+                "latest_form": info["latest_form"],
+            }
+        )
 
     # Sort by most recent filing date (recency-first)
     enriched.sort(key=lambda x: x["latest_date"], reverse=True)
     return enriched, total_unique
 
 
-def _render_markdown(keyword: str, since: str, until: str,
-                     results: list[dict], total_unique: int) -> str:
+def _render_markdown(
+    keyword: str, since: str, until: str, results: list[dict], total_unique: int
+) -> str:
     """Render theme search results as Markdown."""
     lines = []
     lines.append(f'# Theme Search: "{keyword}" (since {since})\n')
     lines.append(
-        f"Found {total_unique} unique companies mentioning \"{keyword}\" in SEC filings.\n"
+        f'Found {total_unique} unique companies mentioning "{keyword}" in SEC filings.\n'
         f"After universe filter ({c.universe_label()}): **{len(results)} companies**.\n"
     )
 
@@ -159,8 +172,12 @@ def _render_markdown(keyword: str, since: str, until: str,
         lines.append(f"No companies in the {c.universe_label()} universe matched this search.\n")
         return "\n".join(lines)
 
-    lines.append("| # | Ticker | Company | Sector | Mkt Cap | Price | Mentions | Most Recent Filing |")
-    lines.append("|---|--------|---------|--------|---------|-------|----------|--------------------|")
+    lines.append(
+        "| # | Ticker | Company | Sector | Mkt Cap | Price | Mentions | Most Recent Filing |"
+    )
+    lines.append(
+        "|---|--------|---------|--------|---------|-------|----------|--------------------|"
+    )
     for i, r in enumerate(results, 1):
         price_s = f"${r['price']:.2f}" if r.get("price") else "n/a"
         lines.append(
@@ -178,8 +195,12 @@ def main():
     p.add_argument("--keyword", required=True, help="Search term.")
     p.add_argument("--since", required=True, help="Start date YYYY-MM-DD.")
     p.add_argument("--until", help="End date YYYY-MM-DD (default: today).")
-    p.add_argument("--limit", type=int, default=200,
-                   help="Max EFTS results to fetch before dedup (default: 200).")
+    p.add_argument(
+        "--limit",
+        type=int,
+        default=200,
+        help="Max EFTS results to fetch before dedup (default: 200).",
+    )
     c.add_identity_arg(p)
     c.add_cache_arg(p)
     args = p.parse_args()
@@ -202,7 +223,7 @@ def main():
     md = _render_markdown(args.keyword, args.since, until, results, total_unique)
 
     # Slug: sanitize keyword for filename
-    slug_kw = re.sub(r'[^a-zA-Z0-9]+', '-', args.keyword).strip('-').lower()
+    slug_kw = re.sub(r"[^a-zA-Z0-9]+", "-", args.keyword).strip("-").lower()
     slug = f"{slug_kw}_since-{args.since}"
     c.write_output(cache, "themes", slug, md)
 

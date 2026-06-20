@@ -15,6 +15,7 @@ Output convention: human-readable progress goes to stderr via ``log``; the
 machine-readable result (always an absolute path) goes to stdout via ``emit``,
 so a calling agent can capture the path without parsing log noise.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -43,13 +44,13 @@ def log(msg: str) -> None:
     print(msg, file=sys.stderr, flush=True)
 
 
-def emit(path: "str | os.PathLike") -> None:
+def emit(path: str | os.PathLike) -> None:
     """Machine-readable result -> stdout: one absolute path per line."""
     print(str(Path(path).resolve()))
 
 
 # --- SEC identity: a mechanical requirement, never a silent default -------
-def resolve_identity(cli_value: "str | None" = None) -> str:
+def resolve_identity(cli_value: str | None = None) -> str:
     """Return the SEC identity or exit(2) with an actionable message.
 
     The SEC fair-access policy requires a real ``Name email`` User-Agent;
@@ -81,7 +82,7 @@ def add_identity_arg(parser: argparse.ArgumentParser) -> None:
 
 
 # --- Cache contract -------------------------------------------------------
-def cache_root(cli_value: "str | None" = None) -> Path:
+def cache_root(cli_value: str | None = None) -> Path:
     """Resolve the cache root: --cache-dir > $SEC_CACHE_DIR > ./sec-cache.
 
     Default is workspace-relative and *visible* on purpose:
@@ -105,9 +106,7 @@ def add_cache_arg(parser: argparse.ArgumentParser) -> None:
 
 def safe_component(part: object) -> str:
     """Make a single path component filesystem-safe (e.g. 10-K/A -> 10-K-A)."""
-    cleaned = "".join(
-        ch if (ch.isalnum() or ch in "-._") else "-" for ch in str(part)
-    )
+    cleaned = "".join(ch if (ch.isalnum() or ch in "-._") else "-" for ch in str(part))
     return cleaned.strip("-") or "x"
 
 
@@ -123,21 +122,20 @@ def filing_stem(filing) -> str:
         safe_component(getattr(filing, "form", "filing")),
         safe_component(getattr(filing, "filing_date", "")),
         safe_component(
-            getattr(filing, "accession_no", None)
-            or getattr(filing, "accession_number", "")
+            getattr(filing, "accession_no", None) or getattr(filing, "accession_number", "")
         ),
     ]
     return "_".join(p for p in parts if p and p != "x")
 
 
-def company_dir(root: Path, company, ticker_hint: "str | None" = None) -> Path:
+def company_dir(root: Path, company, ticker_hint: str | None = None) -> Path:
     """Return (and create) ``<root>/<TICKER>/``; falls back to CIK if unknown."""
     label = ticker_hint
     if not label:
         try:
             tickers = getattr(company, "tickers", None)
             if tickers:
-                label = list(tickers)[0]
+                label = next(iter(tickers))
         except Exception:
             label = None
     if not label:
@@ -158,7 +156,7 @@ def resolve_company(ticker_or_cik: str):
         sys.exit(1)
 
 
-def write_text(path: "str | os.PathLike", content: str) -> Path:
+def write_text(path: str | os.PathLike, content: str) -> Path:
     """Write UTF-8 text, creating parent directories as needed."""
     p = Path(path)
     p.parent.mkdir(parents=True, exist_ok=True)

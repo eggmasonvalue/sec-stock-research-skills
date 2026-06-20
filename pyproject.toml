@@ -28,6 +28,10 @@ ignore = [
     "D104", # Missing docstring in public package
     "D203", # 1 blank line required before class docstring (conflict with D211)
     "D213", # Multi-line docstring summary should start at the second line (conflict with D212)
+    "D103", # Missing docstring in public function (CLI entry points and helper functions do not need public API docs)
+    "E501", # Line too long (allow longer tables/descriptions/argument lists)
+    "RUF001", # String contains ambiguous character (e.g. sigma for standard deviation)
+    "RUF003", # Comment contains ambiguous character (e.g. en-dash or decorations)
 ]
 
 [tool.ruff.lint.pydocstyle]
@@ -35,3 +39,8 @@ convention = "google"
 
 [tool.ruff.lint.isort]
 known-first-party = ["bottom-up-analyst", "market-scout", "pitch-like-lou", "sec-edgar-skill", "signal-sweep"]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.15.18",
+]

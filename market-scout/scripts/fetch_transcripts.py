@@ -25,6 +25,7 @@ printed to stdout (one per line). Progress goes to stderr.
 Prerequisite: ``agent-browser`` must be installed and on PATH.
 Run ``--help`` for the full flag reference.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -37,7 +38,7 @@ import sys
 import time
 from pathlib import Path
 
-import _common as c  # noqa: F401  (sets UTF-8 stdout on Windows)
+import _common as c
 
 _BASE = "https://finance.yahoo.com"
 _DELAY = 2.0  # polite delay between page fetches (seconds)
@@ -47,13 +48,14 @@ _DELAY = 2.0  # polite delay between page fetches (seconds)
 # Cache helpers
 # ---------------------------------------------------------------------------
 
-def _cache_root(cli_value: "str | None" = None) -> Path:
+
+def _cache_root(cli_value: str | None = None) -> Path:
     root = cli_value or os.environ.get("TRANSCRIPT_CACHE_DIR") or "transcript-cache"
     return Path(root).resolve()
 
 
 def _safe(part: str) -> str:
-    return re.sub(r'[^\w\-.]', '-', str(part)).strip('-') or 'x'
+    return re.sub(r"[^\w\-.]", "-", str(part)).strip("-") or "x"
 
 
 def _transcript_dir(root: Path, ticker: str) -> Path:
@@ -66,8 +68,10 @@ def _transcript_dir(root: Path, ticker: str) -> Path:
 # agent-browser helpers
 # ---------------------------------------------------------------------------
 
+
 def _find_agent_browser() -> str:
     import shutil
+
     for name in ["agent-browser", "agent-browser.cmd"]:
         found = shutil.which(name)
         if found:
@@ -81,7 +85,9 @@ def _run_agent_browser(args: list[str], timeout: int = 45) -> str:
     try:
         result = subprocess.run(
             [exe, *args],
-            capture_output=True, text=True, timeout=timeout + 15,
+            capture_output=True,
+            text=True,
+            timeout=timeout + 15,
             shell=False,
         )
         if result.returncode != 0:
@@ -123,13 +129,14 @@ def _run_browser_script(script: str, timeout: int = 45) -> str:
 # Step 1: List available transcripts
 # ---------------------------------------------------------------------------
 
+
 def _fetch_listing(ticker: str) -> list[dict]:
     """Fetch the list of available transcripts for a ticker."""
     url = f"{_BASE}/quote/{ticker}/earnings-calls/"
     if not _open_url(url, timeout=45):
         return []
     time.sleep(3)
-    script = "JSON.stringify(Array.from(document.querySelectorAll('a[href*=\"earnings_call\"]')).map(a=>({url:a.getAttribute(\"href\"),title:(a.textContent||\"\").trim()||a.getAttribute(\"aria-label\")||a.getAttribute(\"href\")})).filter(x=>x.url).filter((x,i,arr)=>arr.findIndex(y=>y.url===x.url)===i))"
+    script = 'JSON.stringify(Array.from(document.querySelectorAll(\'a[href*="earnings_call"]\')).map(a=>({url:a.getAttribute("href"),title:(a.textContent||"").trim()||a.getAttribute("aria-label")||a.getAttribute("href")})).filter(x=>x.url).filter((x,i,arr)=>arr.findIndex(y=>y.url===x.url)===i))'
     raw = _run_browser_script(script)
     if not raw:
         return []
@@ -144,7 +151,8 @@ def _fetch_listing(ticker: str) -> list[dict]:
 # Step 2: Fetch a single transcript
 # ---------------------------------------------------------------------------
 
-def _fetch_transcript(url: str) -> "dict | None":
+
+def _fetch_transcript(url: str) -> dict | None:
     """Fetch and parse a single transcript page."""
     full_url = f"{_BASE}{url}" if url.startswith("/") else url
     if not _open_url(full_url, timeout=50):
@@ -198,6 +206,7 @@ JSON.stringify((() => {
 # ---------------------------------------------------------------------------
 # Markdown rendering
 # ---------------------------------------------------------------------------
+
 
 def _render_markdown(ticker: str, url: str, data: dict) -> str:
     """Render a parsed transcript as LLM-friendly Markdown."""
@@ -254,8 +263,8 @@ def _render_markdown(ticker: str, url: str, data: dict) -> str:
 
 
 def _filename_from_title(title: str) -> str:
-    """Convert 'CMTL Q3 FY2026 earnings call transcript' -> 'Q3-FY2026.md'"""
-    m = re.search(r'(Q\d)\s+(FY\d{4})', title, re.IGNORECASE)
+    """Convert 'CMTL Q3 FY2026 earnings call transcript' -> 'Q3-FY2026.md'."""
+    m = re.search(r"(Q\d)\s+(FY\d{4})", title, re.IGNORECASE)
     if m:
         return f"{m.group(1).upper()}-{m.group(2).upper()}.md"
     return _safe(title[:60]) + ".md"
@@ -265,22 +274,27 @@ def _filename_from_title(title: str) -> str:
 # Main
 # ---------------------------------------------------------------------------
 
+
 def main():
-    p = argparse.ArgumentParser(
-        description="Fetch earnings call transcripts from Yahoo Finance."
-    )
+    p = argparse.ArgumentParser(description="Fetch earnings call transcripts from Yahoo Finance.")
     p.add_argument("--ticker", required=True, help="Stock ticker (Yahoo symbol).")
-    p.add_argument("--list", action="store_true",
-                   help="List available transcripts without downloading.")
-    p.add_argument("--latest", type=int, default=0,
-                   help="Download only the N most recent transcripts.")
-    p.add_argument("--quarter", type=str, default=None,
-                   help="Filter to a specific quarter (e.g. Q3).")
-    p.add_argument("--year", type=int, default=None,
-                   help="Filter to a specific fiscal year (e.g. 2025).")
-    p.add_argument("--cache-dir", default=None,
-                   help="Cache root (default: $TRANSCRIPT_CACHE_DIR "
-                        "or ./transcript-cache).")
+    p.add_argument(
+        "--list", action="store_true", help="List available transcripts without downloading."
+    )
+    p.add_argument(
+        "--latest", type=int, default=0, help="Download only the N most recent transcripts."
+    )
+    p.add_argument(
+        "--quarter", type=str, default=None, help="Filter to a specific quarter (e.g. Q3)."
+    )
+    p.add_argument(
+        "--year", type=int, default=None, help="Filter to a specific fiscal year (e.g. 2025)."
+    )
+    p.add_argument(
+        "--cache-dir",
+        default=None,
+        help="Cache root (default: $TRANSCRIPT_CACHE_DIR or ./transcript-cache).",
+    )
     args = p.parse_args()
 
     ticker = args.ticker.upper()
@@ -302,7 +316,7 @@ def main():
         y = str(args.year)
         transcripts = [t for t in transcripts if y in t["title"]]
     if args.latest and args.latest > 0:
-        transcripts = transcripts[:args.latest]
+        transcripts = transcripts[: args.latest]
 
     if args.list:
         print(f"# Earnings call transcripts for {ticker}\n")
@@ -325,11 +339,11 @@ def main():
         out_path = out_dir / fname
 
         if out_path.exists():
-            c.log(f"  [{i+1}/{len(transcripts)}] Already cached: {fname}")
+            c.log(f"  [{i + 1}/{len(transcripts)}] Already cached: {fname}")
             print(str(out_path.resolve()))
             continue
 
-        c.log(f"  [{i+1}/{len(transcripts)}] Downloading: {t['title']}")
+        c.log(f"  [{i + 1}/{len(transcripts)}] Downloading: {t['title']}")
         data = _fetch_transcript(t["url"])
         if not data or not data.get("blocks"):
             c.log("    WARNING: no transcript content found, skipping.")

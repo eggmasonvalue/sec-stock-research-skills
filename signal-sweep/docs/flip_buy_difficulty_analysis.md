@@ -5,7 +5,9 @@ This document provides a comprehensive feasibility and difficulty analysis for i
 ---
 
 ## 1. Investment Thesis of the "Flip-Buy" Signal
+
 In insider-activity analysis:
+
 - **Routine Selling:** Insiders sell shares frequently for liquidity, tax management, or portfolio diversification. Sells are often automated under 10b5-1 plans and carry less directional information.
 - **Active Buying:** Open-market purchases require active capital deployment and are strong indicators of valuation confidence.
 - **The "Flip" Shift:** When an insider who has been consistently selling for months suddenly turns around and buys, it signifies a major sentiment inflection point. It indicates that the stock has reached a price point so low, or the business has reached a turning point so positive, that the insider is willing to break their selling pattern and deploy cash.
@@ -15,6 +17,7 @@ In insider-activity analysis:
 ## 2. Current Architecture vs. Flip-Buy Requirements
 
 ### Current Flow in [scan_insiders.py](file:///D:/Misc2/06_backups/us-market-research-skills/signal-sweep/scripts/scan_insiders.py)
+
 1. Fetches the daily bulk Form 4 index for the lookback window (e.g., last 5 trading days).
 2. Filters to the market-cap universe ($50M–$10B) via `_common.in_universe`.
 3. Parses open-market purchases (code `P`) from the current filings using `edgartools`.
@@ -30,6 +33,7 @@ graph TD
 ```
 
 ### Proposed Flip-Buy Flow
+
 To detect a flip-buy, the system must inspect the *historical context* of the purchasing insider:
 
 ```mermaid
@@ -52,16 +56,19 @@ graph TD
 We rate the overall implementation difficulty as **Moderate**. The mathematical logic is simple, but building a performant, SEC-compliant caching layer is crucial.
 
 ### Challenge A: SEC Rate Limiting & Network Overhead (High Complexity)
+
 - **Problem:** If the daily scan finds purchases in 30 different tickers, fetching 12 months of Form 4 filings for each ticker at runtime requires making dozens of SEC EDGAR API calls. Under the SEC's fair access policy, requests are limited to **10 requests/sec**, and synchronous retrieval would make the daily scan take several minutes.
 - **Solution:** A persistent transaction cache on disk (e.g. `signal-sweep-cache/insiders/{ticker}_txns.json`) is mandatory. For any ticker, the script should load the cache, find the latest cached transaction date, fetch only newer filings, and merge them.
 - **Difficulty:** **Medium-High** (requires state management and robust exception handling).
 
 ### Challenge B: Insider Name Normalization (Medium Complexity)
+
 - **Problem:** Insiders are represented by strings in the filing object (`row.get("Insider")`). Names may vary slightly across filings (e.g. "Smith John", "Smith John A.", "Smith John Jr.").
 - **Solution:** Normalization helper to strip punctuation, remove middle initials/suffixes, and standardize formatting. Alternatively, extract the unique reporter CIK (`rptOwnerCik` XML node) from the raw Form 4 XML structure using `edgartools` if exposed.
 - **Difficulty:** **Medium**.
 
 ### Challenge C: Defining a "Flip" Algorithmic Rule (Low Complexity)
+
 - **Problem:** We need a clear mathematical definition of a flip to avoid tagging noise (e.g. an insider who sold $100 of shares for taxes but bought $100,000 of shares is a buy, not a flip).
 - **Solution:** Define a parameterized rule:
   - **Lookback Period:** 180 to 365 calendar days.
@@ -199,6 +206,7 @@ def check_flip_buy(ticker: str, purchase_insider: str, purchase_date: str, txns:
 ---
 
 ## 6. Recommendations & Trade-offs
+
 1. **Name Matching Stability:** While string normalization is usually sufficient, we recommend looking into `edgartools`' API to see if the reporting owner's CIK is exposed directly. Using CIKs guarantees zero name-collision bugs.
 2. **Programmatic (10b5-1) Sells:** Programmatic sells are scheduled and less discretionary. Consider filtering out sales that are flagged as 10b5-1 (this is represented by a footnote in Form 4s). If the sales were purely 10b5-1, the "flip" is slightly less significant than if they were active, discretionary sells. However, discretionary sells followed by a buy represents a maximum-conviction pivot.
 3. **Execution Mode:** To avoid slowing down the default scan, we suggest adding a `--detect-flips` CLI flag to `scan_insiders.py` so that users can opt-in to this intensive analysis step when needed.

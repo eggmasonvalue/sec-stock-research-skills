@@ -7,6 +7,7 @@ Follows the same conventions as sec-edgar-skill and market-scout:
   * SEC identity resolution
   * Market-cap cache (yfinance lookups are expensive at scale)
 """
+
 from __future__ import annotations
 
 import argparse
@@ -27,6 +28,7 @@ if sys.platform.startswith("win"):
 
 try:
     import truststore
+
     truststore.inject_into_ssl()
 except Exception:
     pass
@@ -37,13 +39,13 @@ def log(msg: str) -> None:
     print(msg, file=sys.stderr, flush=True)
 
 
-def emit(path: "str | os.PathLike") -> None:
+def emit(path: str | os.PathLike) -> None:
     """Machine-readable result -> stdout: one absolute path per line."""
     print(str(Path(path).resolve()))
 
 
 # --- SEC identity ---------------------------------------------------------
-def resolve_identity(cli_value: "str | None" = None) -> str:
+def resolve_identity(cli_value: str | None = None) -> str:
     """Return the SEC identity or exit(2) with an actionable message."""
     identity = cli_value or os.environ.get("EDGAR_IDENTITY")
     if not identity or "@" not in identity:
@@ -55,6 +57,7 @@ def resolve_identity(cli_value: "str | None" = None) -> str:
         )
         sys.exit(2)
     from edgar import set_identity
+
     set_identity(identity)
     return identity
 
@@ -67,7 +70,7 @@ def add_identity_arg(parser: argparse.ArgumentParser) -> None:
 
 
 # --- Output cache ---------------------------------------------------------
-def cache_root(cli_value: "str | None" = None) -> Path:
+def cache_root(cli_value: str | None = None) -> Path:
     """Resolve cache root: --cache-dir > $SIGNAL_SWEEP_CACHE > ./signal-sweep-cache."""
     root = cli_value or os.environ.get("SIGNAL_SWEEP_CACHE") or "signal-sweep-cache"
     return Path(root).resolve()
